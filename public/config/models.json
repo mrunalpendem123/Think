@@ -1,0 +1,44 @@
+{
+  "models": [
+    {
+      "id": "llama-3.3-70b",
+      "name": "Llama 3.3 70B",
+      "provider": "Venice AI",
+      "providerId": "venice",
+      "enabled": true,
+      "toolCallType": "manual"
+    },
+    {
+      "id": "qwen3-235b",
+      "name": "Qwen3 235B",
+      "provider": "Venice AI",
+      "providerId": "venice",
+      "enabled": true,
+      "toolCallType": "manual"
+    },
+    {
+      "id": "mistral-31-24b",
+      "name": "Mistral 31 24B",
+      "provider": "Venice AI",
+      "providerId": "venice",
+      "enabled": true,
+      "toolCallType": "manual"
+    },
+    {
+      "id": "venice-uncensored",
+      "name": "Venice Uncensored",
+      "provider": "Venice AI",
+      "providerId": "venice",
+      "enabled": true,
+      "toolCallType": "manual"
+    },
+    {
+      "id": "qwen3-4b",
+      "name": "Qwen3 4B",
+      "provider": "Venice AI",
+      "providerId": "venice",
+      "enabled": true,
+      "toolCallType": "manual"
+    }
+  ]
+}
