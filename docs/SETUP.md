@@ -195,7 +195,7 @@ Contributions welcome! Please open an issue or pull request on GitHub.
 
 ## 📄 License
 
-Apache-2.0 (inherited from Morphic)
+Apache-2.0
 
 ## ⚠️ Important Notes
 
