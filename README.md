@@ -6,8 +6,6 @@ A privacy-focused AI search engine that puts **your data security first**. In an
 
 **Powered by:** Venice AI (Private LLM) + Parallel AI (Privacy-First Search)
 
-![Private Search AI Interface](/public/screenshot-2025-05-04.png)
-
 ---
 
 ## 💭 The Mission
@@ -624,7 +622,7 @@ Your Query → Venice AI (No Logging) → Parallel AI (Private Search) → Respo
 
 ## 📜 License
 
-Apache-2.0 (inherited from [Morphic](https://github.com/miurla/morphic))
+Apache-2.0
 
 This ensures:
 - ✅ Free to use
@@ -634,10 +632,9 @@ This ensures:
 
 ---
 
-## 🙏 Credits & Acknowledgments
+## 🙏 Acknowledgments
 
-Built on top of:
-- [Morphic](https://github.com/miurla/morphic) by [@miurla](https://github.com/miurla) - Original AI search UI
+Built with:
 - [Venice AI](https://venice.ai/) - Privacy-focused LLM infrastructure
 - [Parallel AI](https://parallel.ai/) - Privacy-first search API
 - [Vercel AI SDK](https://sdk.vercel.ai/) - Streaming AI responses
