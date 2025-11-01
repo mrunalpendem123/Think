@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 import { deleteChat } from '@/lib/actions/chat'
-import { getCurrentUserId } from '@/lib/auth/get-current-user'
 
 export async function DELETE(
   request: NextRequest,
@@ -20,7 +20,10 @@ export async function DELETE(
     return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 })
   }
 
-  const userId = await getCurrentUserId()
+  // Get wallet address from cookies
+  const cookieStore = await cookies()
+  const walletAddress = cookieStore.get('wallet-address')?.value
+  const userId = walletAddress || 'anonymous'
 
   try {
     const result = await deleteChat(chatId, userId)
