@@ -36,12 +36,11 @@ const nextConfig = {
       os: false
     }
 
-    // Fix for pino-pretty - make it optional
-    config.plugins.push(
-      new (require('webpack')).IgnorePlugin({
-        resourceRegExp: /^pino-pretty$/
-      })
-    )
+    // Fix for pino-pretty - ignore it as external
+    if (!isServer) {
+      config.externals = config.externals || []
+      config.externals.push('pino-pretty')
+    }
 
     // Ignore node-specific modules
     config.resolve.alias = {

@@ -19,6 +19,11 @@ export function WalletSessionHandler() {
       setCookie('wallet-address', '')
       console.log('Wallet disconnected')
     }
+    
+    // Trigger chat history update
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('chat-history-updated'))
+    }
   }, [address, isConnected])
 
   return null // This component doesn't render anything
