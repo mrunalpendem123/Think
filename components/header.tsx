@@ -1,23 +1,23 @@
 'use client'
 
-// import Link from 'next/link' // No longer needed directly here for Sign In button
 import React from 'react'
 
-import { User } from '@supabase/supabase-js'
+import { Settings2 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
 import { useSidebar } from '@/components/ui/sidebar'
 
-// import { Button } from './ui/button' // No longer needed directly here for Sign In button
-import GuestMenu from './guest-menu' // Import the new GuestMenu component
-import UserMenu from './user-menu'
+import { Button } from './ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger
+} from './ui/dropdown-menu'
+import { ThemeMenuItems } from './theme-menu-items'
+import { WalletConnectButton } from './wallet-connect-button'
 
-interface HeaderProps {
-  user: User | null
-}
-
-export const Header: React.FC<HeaderProps> = ({ user }) => {
+export const Header: React.FC = () => {
   const { open } = useSidebar()
   return (
     <header
@@ -27,11 +27,22 @@ export const Header: React.FC<HeaderProps> = ({ user }) => {
         'w-full'
       )}
     >
-      {/* This div can be used for a logo or title on the left if needed */}
       <div></div>
 
       <div className="flex items-center gap-2">
-        {user ? <UserMenu user={user} /> : <GuestMenu />}
+        <WalletConnectButton />
+        
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Settings2 className="h-5 w-5" />
+              <span className="sr-only">Open menu</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <ThemeMenuItems />
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
