@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 
 import { getModels } from '@/lib/config/models'
 
+// Force this route to be dynamic (not statically rendered)
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     const models = await getModels()
