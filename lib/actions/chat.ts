@@ -90,6 +90,9 @@ export async function getChatsPage(
 ): Promise<{ chats: Chat[]; nextOffset: number | null }> {
   try {
     const redis = await getRedis()
+    if (!redis) {
+      return { chats: [], nextOffset: null }
+    }
     const userChatKey = getUserChatKey(userId)
     const start = offset
     const end = offset + limit - 1

@@ -42,6 +42,12 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
       return
     }
 
+    // Check if result is an error
+    if ('error' in result) {
+      toast.error(result.error || 'Failed to share chat')
+      return
+    }
+
     if (!result.sharePath) {
       toast.error('Could not copy link to clipboard')
       return
