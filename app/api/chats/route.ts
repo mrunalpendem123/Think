@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 import { getChatsPage } from '@/lib/actions/chat'
-import { getCurrentUserId } from '@/lib/auth/get-current-user'
 import { type Chat } from '@/lib/types'
 
 interface ChatPageResponse {
@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
   const offset = parseInt(searchParams.get('offset') || '0', 10)
   const limit = parseInt(searchParams.get('limit') || '20', 10)
 
-  const userId = await getCurrentUserId()
+  // Get wallet address from cookies
+  const cookieStore = await cookies()
+  const walletAddress = cookieStore.get('wallet-address')?.value
+  const userId = walletAddress || 'anonymous'
 
   try {
     const result = await getChatsPage(userId, limit, offset)
