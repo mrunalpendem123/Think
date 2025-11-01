@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
+import { NextRequest, NextResponse } from 'next/server'
 
 import { getChatsPage } from '@/lib/actions/chat'
 import { type Chat } from '@/lib/types'
