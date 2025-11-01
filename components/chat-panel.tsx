@@ -123,6 +123,9 @@ export function ChatPanel({
           <p className="text-center text-3xl font-semibold">
             How can I help you today?
           </p>
+          <p className="text-center text-sm text-muted-foreground max-w-md">
+            Your searches are private. No tracking, no logging, no data retention.
+          </p>
         </div>
       )}
       <form
