@@ -152,7 +152,7 @@ export function ChatPanel({
             tabIndex={0}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
-            placeholder="Ask a question..."
+            placeholder="Ask a question privately..."
             spellCheck={false}
             value={input}
             disabled={isLoading || isToolInvocationInProgress()}
