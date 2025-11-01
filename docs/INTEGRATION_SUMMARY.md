@@ -173,5 +173,5 @@ User Interface (Streamed Response)
 
 - Venice AI Docs: https://docs.venice.ai
 - Parallel AI Docs: https://docs.parallel.ai
-- Morphic Original: https://github.com/miurla/morphic
+- Project Repository: https://github.com/mrunalpendem123/Think
 

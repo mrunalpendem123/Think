@@ -187,11 +187,11 @@ Before pushing to GitHub:
 
 - [Venice AI Docs](https://docs.venice.ai/)
 - [Parallel AI Docs](https://docs.parallel.ai/)
-- [Morphic Original](https://github.com/miurla/morphic)
+- [Next.js Documentation](https://nextjs.org/docs)
 
 ## 🤝 Contributing
 
-This is a private implementation. If you want to contribute to the original Morphic project, visit [miurla/morphic](https://github.com/miurla/morphic).
+Contributions welcome! Please open an issue or pull request on GitHub.
 
 ## 📄 License
 
