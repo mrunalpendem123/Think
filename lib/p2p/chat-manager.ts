@@ -74,8 +74,9 @@ export class ChatManager {
     console.log('🌐 Creating WebRTC provider...')
     this.provider = new WebrtcProvider(this.chatId, this.ydoc, {
       signaling: [
+        'wss://demos.yjs.dev', // Working demo server
         'wss://signaling.yjs.dev',
-        'wss://yjs-signaling-server.fly.dev' // Alternative free server
+        'wss://y-webrtc-iygjqp4gqa-uc.a.run.app' // Google Cloud backup
       ],
       password: this.chatId, // Use chat ID as password for encryption
       awareness: new (await import('y-protocols/awareness')).Awareness(this.ydoc),

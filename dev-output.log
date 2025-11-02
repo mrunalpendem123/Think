@@ -237,3 +237,23 @@ Successfully loaded models from URL
 OLLAMA_BASE_URL not configured, skipping Ollama models
 Loaded 5 static models and 0 Ollama models
  HEAD /collab/collab-a63552b8-7f63-4e92-be19-93aa4bf12e8b 200 in 1499ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 878ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 439ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 753ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 897ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-77cfc41a-e77f-4557-b0cb-6e4725695644 200 in 286ms
+ ✓ Compiled in 926ms
