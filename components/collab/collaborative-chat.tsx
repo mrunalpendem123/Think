@@ -17,8 +17,9 @@ import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import { getOrCreateSessionId } from '@/lib/utils/session'
 
-import { ChatMessages } from '../chat-messages'
-import { ChatPanel } from '../chat-panel'
+import { ChatMessages } from '@/components/chat-messages'
+import { ChatPanel } from '@/components/chat-panel'
+
 import { ChatControls } from './chat-controls'
 import { PresenceIndicator } from './presence-indicator'
 import { TypingIndicator } from './typing-indicator'
