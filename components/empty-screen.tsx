@@ -1,6 +1,10 @@
 import { ArrowRight } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
+
+import { CreateCollabButton } from './collab/create-collab-button'
+import { JoinCollabDialog } from './collab/join-collab-dialog'
 
 const exampleMessages = [
   {
@@ -30,6 +34,21 @@ export function EmptyScreen({
   return (
     <div className={`mx-auto w-full transition-all ${className}`}>
       <div className="bg-background p-2">
+        {/* Collaborative Chat Options */}
+        <div className="mb-6 p-4 bg-primary/5 border border-primary/10 rounded-lg">
+          <h3 className="text-sm font-semibold mb-2">Collaborative Mode</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Work together with others in real-time. All participants see AI responses instantly.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <CreateCollabButton />
+            <JoinCollabDialog />
+          </div>
+        </div>
+
+        <Separator className="my-4" />
+
+        {/* Example Messages */}
         <div className="mt-2 flex flex-col items-start space-y-2 mb-4">
           {exampleMessages.map((message, index) => (
             <Button
