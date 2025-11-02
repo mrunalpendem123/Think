@@ -1,10 +1,12 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+
 import { useChat } from '@ai-sdk/react'
 import { ToolInvocation } from 'ai'
 
 import type { SearchResults as TypeSearchResults } from '@/lib/types'
-import { isWeatherQuery, parseWeatherFromSearch } from '@/lib/utils/weather-parser'
+import { extractLocation, fetchWeather, isWeatherQuery, WeatherData } from '@/lib/utils/weather-parser'
 
 import { useArtifact } from '@/components/artifact/artifact-context'
 
@@ -42,11 +44,23 @@ export function SearchSection({
     ? ` [${includeDomains.join(', ')}]`
     : ''
 
-  // Parse weather data if this is a weather query
-  const weatherData = 
-    query && searchResults && isWeatherQuery(query)
-      ? parseWeatherFromSearch(searchResults, query)
-      : null
+  // Fetch weather data if this is a weather query
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null)
+  
+  useEffect(() => {
+    if (query && isWeatherQuery(query) && tool.state === 'result') {
+      const location = extractLocation(query)
+      console.log('🌤️ Weather: Detected weather query, fetching for:', location)
+      fetchWeather(location).then(data => {
+        if (data) {
+          console.log('✅ Weather: Fetched successfully', data)
+          setWeatherData(data)
+        } else {
+          console.log('❌ Weather: Failed to fetch')
+        }
+      })
+    }
+  }, [query, tool.state])
 
   const { open } = useArtifact()
   const header = (
