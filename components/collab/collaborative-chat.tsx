@@ -93,41 +93,65 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
 
   // Initialize P2P chat manager
   useEffect(() => {
+    let mounted = true
+    let manager: ChatManager | null = null
+
     const initializeP2P = async () => {
+      if (!mounted) return
+
       const userId = getUserId()
       const userName = getUserName()
 
-      const manager = new ChatManager(chatId, userId, userName)
-      await manager.connect()
-      chatManagerRef.current = manager
+      console.log('🚀 Initializing P2P (mounted:', mounted, ')')
 
-      // Listen for messages from peers
-      manager.onMessages((collabMessages) => {
-        console.log('📨 P2P: Received messages:', collabMessages.length)
-        // Convert collaborative messages to AI SDK format
-        const uiMessages: Message[] = collabMessages.map(msg => ({
-          id: msg.id,
-          role: msg.role,
-          content: msg.content
-        }))
-        setMessages(uiMessages)
-      })
+      manager = new ChatManager(chatId, userId, userName)
+      
+      try {
+        await manager.connect()
+        
+        if (!mounted) {
+          console.log('⚠️ Component unmounted during connect, cleaning up')
+          manager.disconnect()
+          return
+        }
 
-      // Listen for peer changes
-      manager.onPeersChange((newPeers) => {
-        console.log('👥 P2P: Peers updated:', newPeers.length)
-        setPeers(newPeers)
-      })
+        chatManagerRef.current = manager
 
-      setIsConnecting(false)
-      toast.success('Connected to collaborative chat!')
+        // Listen for messages from peers
+        manager.onMessages((collabMessages) => {
+          console.log('📨 P2P: Received messages:', collabMessages.length)
+          // Convert collaborative messages to AI SDK format
+          const uiMessages: Message[] = collabMessages.map(msg => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.content
+          }))
+          setMessages(uiMessages)
+        })
+
+        // Listen for peer changes
+        manager.onPeersChange((newPeers) => {
+          console.log('👥 P2P: Peers updated:', newPeers.length)
+          setPeers(newPeers)
+        })
+
+        setIsConnecting(false)
+        toast.success('Connected to collaborative chat!')
+      } catch (error) {
+        console.error('❌ P2P: Failed to connect:', error)
+        toast.error('Failed to connect to collaborative chat')
+        setIsConnecting(false)
+      }
     }
 
     initializeP2P()
 
     return () => {
+      console.log('🧹 Cleanup: Unmounting collaborative chat')
+      mounted = false
       if (chatManagerRef.current) {
         chatManagerRef.current.disconnect()
+        chatManagerRef.current = null
       }
     }
   }, [chatId, getUserId, getUserName, setMessages])

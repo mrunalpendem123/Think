@@ -126,3 +126,68 @@ Manual researcher called with 4 messages
  ✓ Compiled in 863ms
  ✓ Compiled in 148ms
  ✓ Compiled in 110ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+Multiple versions of Lit loaded. Loading multiple versions is not recommended. See https://lit.dev/msg/multiple-versions for more information.
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 1454ms
+[Reown Config] Failed to fetch remote project configuration. Using local/default values. Error: HTTP status code: 403
+    at fetchData (../../../../src/utils/FetchUtil.ts:23:17)
+    at async FetchUtil.get (../../../../src/utils/FetchUtil.ts:44:22)
+    at async Object.fetchProjectConfig (../../../../src/controllers/ApiController.ts:158:22)
+    at async Object.fetchRemoteFeatures (../../../../src/utils/ConfigUtil.ts:233:26)
+    at async AppKit.initialize (../../../../src/client/appkit-base-client.ts:165:27) {
+  [cause]: Response {
+    status: 403,
+    statusText: 'Forbidden',
+    headers: Headers {
+      date: 'Sun, 02 Nov 2025 19:42:53 GMT',
+      'content-type': 'text/plain; charset=UTF-8',
+      'content-length': '9',
+      connection: 'keep-alive',
+      'cf-ray': '99861e1a7afa58b8-MAA',
+      'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      vary: 'Accept-Encoding',
+      server: 'cloudflare',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    body: undefined,
+    bodyUsed: false,
+    ok: false,
+    redirected: false,
+    type: 'default',
+    url: 'https://api.web3modal.org/appkit/v1/config?projectId=c1c3518641e82c96d2b1d3f8e8e07b51&st=appkit&sv=html-core-1.7.8'
+  }
+}
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 266ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 451ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 494ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 986ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 745ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 909ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 800ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-a63552b8-7f63-4e92-be19-93aa4bf12e8b 200 in 470ms

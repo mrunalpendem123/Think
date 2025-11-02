@@ -21,6 +21,9 @@ export interface Peer {
   isTyping: boolean
 }
 
+// Track active rooms to prevent duplicates
+const activeRooms = new Map<string, ChatManager>()
+
 export class ChatManager {
   private ydoc: Y.Doc | null = null
   private provider: WebrtcProvider | null = null
@@ -29,6 +32,7 @@ export class ChatManager {
   private userName: string
   private messages: Y.Array<CollaborativeMessage> | null = null
   private awareness: any = null
+  private isConnected: boolean = false
 
   constructor(chatId: string, userId: string, userName: string) {
     this.chatId = chatId
@@ -40,6 +44,19 @@ export class ChatManager {
    * Initialize the collaborative chat
    */
   async connect() {
+    // Check if already connected
+    if (this.isConnected) {
+      console.log('⚠️ P2P: Already connected, skipping')
+      return
+    }
+
+    // Check if room already exists
+    const existing = activeRooms.get(this.chatId)
+    if (existing && existing !== this) {
+      console.log('⚠️ P2P: Room already exists, disconnecting old instance')
+      existing.disconnect()
+    }
+
     console.log('🔗 P2P: Initializing connection...')
     console.log('   Chat ID:', this.chatId)
     console.log('   User ID:', this.userId)
@@ -57,9 +74,8 @@ export class ChatManager {
     console.log('🌐 Creating WebRTC provider...')
     this.provider = new WebrtcProvider(this.chatId, this.ydoc, {
       signaling: [
-        'wss://signaling.yjs.dev', // Free public signaling server
-        'wss://y-webrtc-signaling-eu.herokuapp.com',
-        'wss://y-webrtc-signaling-us.herokuapp.com'
+        'wss://signaling.yjs.dev',
+        'wss://yjs-signaling-server.fly.dev' // Alternative free server
       ],
       password: this.chatId, // Use chat ID as password for encryption
       awareness: new (await import('y-protocols/awareness')).Awareness(this.ydoc),
@@ -69,6 +85,10 @@ export class ChatManager {
     })
 
     this.awareness = this.provider.awareness
+    this.isConnected = true
+
+    // Register this instance
+    activeRooms.set(this.chatId, this)
 
     // Set local user state
     this.awareness.setLocalState({
@@ -165,13 +185,30 @@ export class ChatManager {
    * Disconnect from the chat
    */
   disconnect() {
+    if (!this.isConnected) {
+      console.log('⚠️ P2P: Not connected, skipping disconnect')
+      return
+    }
+
+    console.log('🔌 P2P: Disconnecting from chat:', this.chatId)
+
     if (this.provider) {
       this.provider.destroy()
+      this.provider = null
     }
     if (this.ydoc) {
       this.ydoc.destroy()
+      this.ydoc = null
     }
-    console.log('🔌 P2P: Disconnected from chat:', this.chatId)
+    
+    this.awareness = null
+    this.messages = null
+    this.isConnected = false
+
+    // Unregister this instance
+    activeRooms.delete(this.chatId)
+
+    console.log('✅ P2P: Disconnected from chat:', this.chatId)
   }
 
   /**
