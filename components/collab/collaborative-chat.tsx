@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { useChat } from '@ai-sdk/react'
+import { ChatRequestOptions } from 'ai'
 import { Message } from 'ai/react'
 import { toast } from 'sonner'
 import { useAccount } from 'wagmi'
@@ -171,6 +172,24 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
     window.location.href = '/'
   }
 
+  const handleReloadFrom = async (
+    messageId: string,
+    options?: ChatRequestOptions
+  ) => {
+    const messageIndex = messages.findIndex(m => m.id === messageId)
+    if (messageIndex !== -1) {
+      const userMessageIndex = messages
+        .slice(0, messageIndex)
+        .findLastIndex(m => m.role === 'user')
+      if (userMessageIndex !== -1) {
+        const trimmedMessages = messages.slice(0, userMessageIndex + 1)
+        setMessages(trimmedMessages)
+        return await reload(options)
+      }
+    }
+    return await reload(options)
+  }
+
   // Detect if scroll container is at the bottom
   useEffect(() => {
     const container = scrollContainerRef.current
@@ -249,7 +268,7 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
           addToolResult={addToolResult}
           scrollContainerRef={scrollContainerRef}
           onUpdateMessage={async () => {}}
-          reload={reload}
+          reload={handleReloadFrom}
         />
       </div>
 
