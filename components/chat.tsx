@@ -184,8 +184,25 @@ export function Chat({
     }
   }, [sections, messages, id])
 
+  // Load chat from IndexedDB on mount
   useEffect(() => {
-    setMessages(savedMessages)
+    const loadChat = async () => {
+      if (savedMessages.length > 0) {
+        setMessages(savedMessages)
+        return
+      }
+
+      // Try to load from IndexedDB
+      const userId = getUserId()
+      const { getChat } = await import('@/lib/actions/chat')
+      const chat = await getChat(id, userId)
+      
+      if (chat && chat.messages && Array.isArray(chat.messages)) {
+        setMessages(chat.messages as Message[])
+      }
+    }
+
+    loadChat()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
