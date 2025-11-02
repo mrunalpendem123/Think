@@ -3,8 +3,8 @@
  * Enables real-time collaborative AI chats with multiple users
  */
 
-import * as Y from 'yjs'
 import { WebrtcProvider } from 'y-webrtc'
+import * as Y from 'yjs'
 
 export interface CollaborativeMessage {
   id: string

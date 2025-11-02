@@ -12,7 +12,7 @@ import { Message } from 'ai/react'
 import { toast } from 'sonner'
 import { useAccount } from 'wagmi'
 
-import { ChatManager, CollaborativeMessage, generateCollabChatId, Peer } from '@/lib/p2p/chat-manager'
+import { ChatManager, Peer } from '@/lib/p2p/chat-manager'
 import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import { getOrCreateSessionId } from '@/lib/utils/session'
