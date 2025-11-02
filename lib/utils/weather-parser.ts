@@ -24,22 +24,57 @@ export interface WeatherData {
 
 /**
  * Detects if a query is weather-related
+ * Comprehensive keyword matching to catch all weather questions
  */
 export function isWeatherQuery(query: string): boolean {
   const weatherKeywords = [
+    // Direct weather terms
     'weather',
     'temperature',
-    'forecast',
     'temp',
+    'forecast',
     'climate',
+    
+    // Conditions
     'sunny',
     'cloudy',
     'rainy',
     'raining',
+    'rain',
+    'snowing',
     'snow',
+    'stormy',
+    'storm',
+    'windy',
+    'wind',
+    'foggy',
+    'fog',
+    'humid',
+    'humidity',
+    
+    // Temperature adjectives
     'hot',
     'cold',
-    'warm'
+    'warm',
+    'cool',
+    'freezing',
+    'chilly',
+    
+    // Weather questions
+    'will it rain',
+    'is it raining',
+    'is it sunny',
+    'is it cold',
+    'is it hot',
+    'how cold',
+    'how hot',
+    'how warm',
+    
+    // Celsius/Fahrenheit
+    'celsius',
+    'fahrenheit',
+    '°c',
+    '°f'
   ]
   
   const lowerQuery = query.toLowerCase()
@@ -48,20 +83,41 @@ export function isWeatherQuery(query: string): boolean {
 
 /**
  * Extracts location from weather query
+ * Removes all weather-related keywords to isolate the location
  */
 export function extractLocation(query: string): string {
-  // Remove weather keywords to get location
-  const cleanQuery = query
-    .toLowerCase()
-    .replace(/what|is|it|the|weather|temperature|temp|forecast|in|for|at|raining|sunny|cloudy/gi, '')
-    .trim()
+  // Comprehensive list of words to remove
+  const wordsToRemove = [
+    'what', 'is', 'it', 'the', 'a', 'an',
+    'weather', 'temperature', 'temp', 'forecast', 'climate',
+    'in', 'for', 'at', 'of', 'today', 'tomorrow', 'now', 'right now',
+    'raining', 'rain', 'rainy', 'sunny', 'cloudy', 'snowing', 'snow',
+    'hot', 'cold', 'warm', 'cool', 'freezing', 'chilly',
+    'will', 'going to', 'gonna', 'like', 'there',
+    'how', 'whats', "what's", 'hows', "how's",
+    'current', 'todays', "today's", 'tonight',
+    'degree', 'degrees', 'celsius', 'fahrenheit'
+  ]
+  
+  let cleanQuery = query.toLowerCase()
+  
+  // Remove all weather keywords
+  wordsToRemove.forEach(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi')
+    cleanQuery = cleanQuery.replace(regex, '')
+  })
+  
+  // Clean up extra spaces
+  cleanQuery = cleanQuery.replace(/\s+/g, ' ').trim()
   
   // Capitalize first letter of each word
-  return cleanQuery
+  const location = cleanQuery
     .split(' ')
     .filter(word => word.length > 0)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ') || 'Unknown Location'
+    .join(' ')
+  
+  return location || 'Unknown Location'
 }
 
 /**
