@@ -37,24 +37,16 @@ export function ChatShare({ chatId, className }: ChatShareProps) {
       setOpen(true)
     })
     const result = await shareChat(chatId)
-    if (!result) {
-      toast.error('Failed to share chat')
+    
+    // shareChat now returns an error since sharing requires server-side storage
+    if (!result || (result && 'error' in result)) {
+      toast.error(
+        result?.error || 
+        'Chat sharing is not available with local storage. Please use Export History instead.'
+      )
+      setOpen(false)
       return
     }
-
-    // Check if result is an error
-    if ('error' in result) {
-      toast.error(result.error || 'Failed to share chat')
-      return
-    }
-
-    if (!result.sharePath) {
-      toast.error('Could not copy link to clipboard')
-      return
-    }
-
-    const url = new URL(result.sharePath, window.location.href)
-    setShareUrl(url.toString())
   }
 
   const handleCopy = () => {
