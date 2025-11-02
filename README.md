@@ -84,9 +84,10 @@ This application is designed with **privacy as the foundation**, not an aftertho
 - ❌ No query logging
 - ❌ No conversation tracking
 - ❌ No user profiling
-- ❌ No analytics or telemetry
-- ❌ No cookies (except authentication if enabled)
+- ❌ No analytics or telemetry (Vercel Analytics disabled by default)
+- ❌ No server-side databases
 - ❌ No third-party trackers
+- ❌ No authentication servers (Web3 wallet only, optional)
 
 ---
 
@@ -94,13 +95,14 @@ This application is designed with **privacy as the foundation**, not an aftertho
 
 ### Core Capabilities
 
-- 🤖 **Multiple AI Models**: Choose from 5 Venice AI models (Llama 3.3 70B, Qwen3 235B, Mistral 31 24B, Venice Uncensored, Qwen3 4B)
+- 🤖 **Multiple AI Models**: Choose from 5 Think AI models optimized for different tasks
 - 🔍 **Real-Time Web Search**: Live search results with citations via Parallel AI
 - 💬 **Conversational Interface**: Natural language queries with streaming responses
 - 📊 **Source Citations**: Every answer includes verifiable sources
 - 🎨 **Modern UI**: Beautiful, dark-themed interface with responsive design
 - 📱 **Mobile-Friendly**: Works seamlessly on desktop, tablet, and mobile
 - ⚡ **Fast Responses**: Streaming AI responses for instant feedback
+- 🔐 **Encrypted Local Storage**: AES-GCM encrypted chat history in your browser
 
 ### Privacy Features
 
@@ -125,6 +127,7 @@ This application is designed with **privacy as the foundation**, not an aftertho
 ### Prerequisites
 
 - Node.js 18+ installed
+- Modern browser with IndexedDB support (Chrome, Firefox, Safari, Brave)
 - API keys from:
   - [Venice AI](https://venice.ai/) - Privacy-focused LLM
   - [Parallel AI](https://parallel.ai/) - Privacy-first search
@@ -225,19 +228,19 @@ PORT=3001 npm run dev
 
 ---
 
-## 🎯 Available AI Models
+## 🎯 Available Think AI Models
 
-Select from these privacy-focused Venice AI models:
+Select from these privacy-focused models powered by Venice AI:
 
-| Model | Parameters | Best For | Speed |
-|-------|------------|----------|-------|
-| **Llama 3.3 70B** | 70B | General use, balanced performance | ⚡⚡⚡ |
-| **Qwen3 235B** | 235B | Complex reasoning, most powerful | ⚡⚡ |
-| **Mistral 31 24B** | 24B | Vision tasks, function calling | ⚡⚡⚡⚡ |
-| **Venice Uncensored** | - | Unrestricted queries, no filtering | ⚡⚡⚡ |
-| **Qwen3 4B** | 4B | Fast responses, simple queries | ⚡⚡⚡⚡⚡ |
+| Model | Base | Best For | Speed |
+|-------|------|----------|-------|
+| **Think AI Standard** | Llama 3.3 70B | General use, balanced performance | ⚡⚡⚡ |
+| **Think AI Pro** | Qwen 3 235B | Complex reasoning, most powerful | ⚡⚡ |
+| **Think AI Vision** | Mistral 3.1 24B | Vision tasks, image analysis | ⚡⚡⚡⚡ |
+| **Think AI Uncensored** | Venice Uncensored | Unrestricted queries, no filtering | ⚡⚡⚡ |
+| **Think AI Fast** | Qwen 3 4B | Lightning-fast responses | ⚡⚡⚡⚡⚡ |
 
-All models run through Venice AI's privacy-preserving infrastructure.
+All models run through Venice AI's privacy-preserving infrastructure with zero data retention.
 
 ---
 
@@ -468,12 +471,16 @@ This checks:
 4. Generate a new API key
 5. Copy your key
 
+**Note:** Venice AI offers $10 in free credits when you upgrade to Pro!
+
 #### Parallel AI (Private Search)
 1. Visit [https://parallel.ai/](https://parallel.ai/)
 2. Create an account
 3. Go to API section
 4. Generate API key
 5. Copy your key
+
+**Note:** Parallel AI is privacy-first web search with no tracking.
 
 ### Step 2: Configure Your Application
 
@@ -530,35 +537,62 @@ Test these scenarios:
 - ✅ Switch between models - UI should update
 - ✅ Check Sources count - Should be > 0
 - ✅ Click citations - Should open actual sources
-- ✅ Check browser DevTools - No tracking scripts loaded
+- ✅ Check browser DevTools → Console - Clean, no Supabase errors
+- ✅ Check browser DevTools → Application → IndexedDB → See encrypted chats
+- ✅ Test Export History button - Downloads JSON backup
+- ✅ Refresh page - Chat history persists
+- ✅ Connect wallet - Separate history per wallet
 
 ---
 
 ## 🐛 Troubleshooting
 
-### "messages must not be empty" Error
+### Chat History Not Saving
 
 **Solution:**
-1. Hard refresh browser (Cmd+Shift+R or Ctrl+Shift+R)
-2. Clear browser cache and storage
-3. Verify Search toggle is ON (blue)
-4. Select a model from dropdown
+1. Check browser console (F12) for IndexedDB errors
+2. Ensure you're NOT in incognito/private mode (IndexedDB disabled)
+3. Clear browser storage: F12 → Application → Clear site data
+4. Hard refresh (Cmd+Shift+R)
+5. Check if IndexedDB is enabled in browser settings
+6. Look for console logs: "✅ IndexedDB: Chat saved successfully!"
+
+### "TransactionInactiveError" in Console
+
+**Solution:**
+Already fixed in latest version! Update to commit `8187bd5` or later.
+
+### Chat History Not Appearing in Sidebar
+
+**Solution:**
+1. Send a complete query (wait for AI response to finish)
+2. Check console for: "📜 History: Loaded X chats"
+3. If shows "Loaded 0 chats" but save succeeded → refresh page
+4. Try Export History button to verify data exists
 
 ### "Sources: 0" Showing
 
 **Solution:**
-1. Verify `PARALLEL_API_KEY` in `.env.local`
-2. Check Search mode is enabled (toggle is blue)
+1. Verify `PARALLEL_API_KEY` in environment variables
+2. Check Search toggle is ON (blue)
 3. Restart dev server: `npm run dev`
-4. Check browser console for API errors
+4. Check browser console for Parallel AI API errors
+5. Test with: "what's trending on Twitter?"
 
 ### Models Not Loading
 
 **Solution:**
-1. Verify `VENICE_API_KEY` in `.env.local`
+1. Verify `VENICE_API_KEY` in environment variables
 2. Check `public/config/models.json` exists
 3. Hard refresh browser
 4. Restart server
+
+### WalletConnect 403 Error
+
+**Solution:**
+1. Get your own Project ID from https://cloud.walletconnect.com
+2. Add to Vercel: `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
+3. This is optional - app works without wallet connection
 
 ### API Key Errors
 
@@ -728,10 +762,16 @@ A: Yes! Deploy on your own servers. You'll still use Venice/Parallel APIs, but c
 A: Chat history is stored encrypted in your browser's IndexedDB. It never leaves your device and you can export/import for backup.
 
 **Q: Is it free?**  
-A: The software is open source and free. Venice AI and Parallel AI charge for API usage.
+A: The software is open source and free. Venice AI and Parallel AI charge for API usage. No subscription or database costs!
+
+**Q: Do I need to set up a database?**  
+A: No! Chat history is stored encrypted in your browser's IndexedDB. Zero server setup required.
 
 **Q: Can I use different AI providers?**  
 A: This version is optimized for Venice AI. You can fork and integrate other privacy-focused providers.
+
+**Q: Does it work in Brave browser?**  
+A: Yes! Fully compatible with Brave. Just disable "Block fingerprinting" for the site if needed.
 
 **Q: How fast is it?**  
 A: Comparable to ChatGPT. Streaming responses start in ~2-3 seconds.
@@ -768,6 +808,28 @@ Every search you make, every question you ask, reveals something about you:
 **You deserve to think freely without surveillance.**
 
 Private Search AI gives you the power of AI **without sacrificing your privacy.**
+
+---
+
+## 🏗️ Technical Architecture
+
+### Storage Architecture
+```
+User Query
+    ↓
+[Venice AI - No Logging] → Response
+    ↓
+[Browser IndexedDB] ← Encrypted with AES-GCM
+    ↓
+[Your Device Only] - Never leaves your browser
+```
+
+### Key Technologies
+- **IndexedDB**: Browser-native database (10GB+ capacity)
+- **Web Crypto API**: Hardware-accelerated AES-GCM encryption
+- **PBKDF2**: Key derivation from user ID (100,000 iterations)
+- **Zero Server Storage**: No Redis, no PostgreSQL, no cloud database
+- **Client-Side Only**: All persistence happens in your browser
 
 ---
 
