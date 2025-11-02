@@ -144,23 +144,23 @@ export async function getChats(
   try {
     const db = await openDatabase()
 
-    return new Promise((resolve, reject) => {
+    // First, collect all encrypted chats synchronously
+    const encryptedChats = await new Promise<any[]>((resolve, reject) => {
       const transaction = db.transaction([CHATS_STORE], 'readonly')
       const store = transaction.objectStore(CHATS_STORE)
       const index = store.index(USER_INDEX)
       const request = index.openCursor(IDBKeyRange.only(userId), 'prev')
 
-      const chats: Chat[] = []
+      const results: any[] = []
       let count = 0
       let skipped = 0
 
-      request.onsuccess = async (event) => {
+      request.onsuccess = (event) => {
         const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result
 
         if (!cursor) {
           // Finished iterating
-          const nextOffset = chats.length === limit ? offset + limit : null
-          resolve({ chats, nextOffset })
+          resolve(results)
           return
         }
 
@@ -173,26 +173,12 @@ export async function getChats(
 
         // Collect items up to limit
         if (count < limit) {
-          try {
-            const result = cursor.value
-            const decryptedMessages = await decrypt(result.messages, userId)
-            const chat: Chat = {
-              ...result,
-              messages: JSON.parse(decryptedMessages),
-              createdAt: new Date(result.createdAt)
-            }
-            chats.push(chat)
-            count++
-            cursor.continue()
-          } catch (error) {
-            console.error('Failed to decrypt chat during iteration:', error)
-            // Skip corrupted chats
-            cursor.continue()
-          }
+          results.push(cursor.value)
+          count++
+          cursor.continue()
         } else {
           // Reached limit
-          const nextOffset = offset + limit
-          resolve({ chats, nextOffset })
+          resolve(results)
         }
       }
 
@@ -200,6 +186,26 @@ export async function getChats(
       
       transaction.oncomplete = () => db.close()
     })
+
+    // Now decrypt all chats outside the transaction
+    const chats: Chat[] = []
+    for (const encryptedChat of encryptedChats) {
+      try {
+        const decryptedMessages = await decrypt(encryptedChat.messages, userId)
+        const chat: Chat = {
+          ...encryptedChat,
+          messages: JSON.parse(decryptedMessages),
+          createdAt: new Date(encryptedChat.createdAt)
+        }
+        chats.push(chat)
+      } catch (error) {
+        console.error('Failed to decrypt chat:', encryptedChat.id, error)
+        // Skip corrupted chats
+      }
+    }
+
+    const nextOffset = encryptedChats.length === limit ? offset + limit : null
+    return { chats, nextOffset }
   } catch (error) {
     console.error('Failed to get chats:', error)
     return { chats: [], nextOffset: null }
