@@ -62,7 +62,7 @@ export function ChatControls({ chatId, peerCount, onLeave }: ChatControlsProps) 
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 z-10 pointer-events-auto">
       {/* Peer count badge */}
       <div className="flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
         <Users size={12} />
@@ -72,7 +72,15 @@ export function ChatControls({ chatId, peerCount, onLeave }: ChatControlsProps) 
       {/* Share button */}
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
         <DialogTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 cursor-pointer pointer-events-auto z-10"
+            onClick={(e) => {
+              console.log('🖱️ Share button clicked!')
+              e.stopPropagation()
+            }}
+          >
             <Share2 size={14} />
             Share
           </Button>
