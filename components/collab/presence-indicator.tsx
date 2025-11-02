@@ -24,15 +24,16 @@ interface PresenceIndicatorProps {
 export function PresenceIndicator({ peers, currentUserName }: PresenceIndicatorProps) {
   const totalUsers = peers.length + 1 // +1 for current user
 
-  if (totalUsers === 1) {
-    return null // Don't show if alone
-  }
-
   return (
     <TooltipProvider>
-      <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
-        <Users size={14} className="text-muted-foreground" />
-        <div className="flex -space-x-2">
+      <div className="flex items-center gap-3 px-3 py-1.5 bg-muted rounded-full min-w-0 flex-shrink">
+        <div className="flex items-center gap-2">
+          <Users size={14} className="text-muted-foreground flex-shrink-0" />
+          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+            {totalUsers} {totalUsers === 1 ? 'user' : 'users'}
+          </span>
+        </div>
+        <div className="flex -space-x-2 flex-shrink-0">
           {/* Current user */}
           <Tooltip>
             <TooltipTrigger>
@@ -68,16 +69,13 @@ export function PresenceIndicator({ peers, currentUserName }: PresenceIndicatorP
 
           {/* Show count if more than 5 peers */}
           {peers.length > 5 && (
-            <Avatar className="size-6 border-2 border-background">
+            <Avatar className="size-6 border-2 border-background flex-shrink-0">
               <AvatarFallback className="text-xs bg-muted-foreground text-background">
                 +{peers.length - 5}
               </AvatarFallback>
             </Avatar>
           )}
         </div>
-        <span className="text-xs text-muted-foreground">
-          {totalUsers} {totalUsers === 1 ? 'user' : 'users'}
-        </span>
       </div>
     </TooltipProvider>
   )

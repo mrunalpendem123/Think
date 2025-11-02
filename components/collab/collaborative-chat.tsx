@@ -69,17 +69,38 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   } = useChat({
     id: chatId,
     body: { id: chatId },
-    onFinish: () => {
-      // Broadcast AI response to peers
-      const lastMessage = messages[messages.length - 1]
-      if (lastMessage && chatManagerRef.current) {
-        chatManagerRef.current.addMessage({
-          id: lastMessage.id,
-          role: 'assistant',
-          content: lastMessage.content,
-          sender: getUserId(),
-          timestamp: Date.now()
+    onFinish: (message) => {
+      // Broadcast BOTH user message and AI response to peers
+      console.log('🤖 AI finished, broadcasting messages')
+      
+      if (chatManagerRef.current) {
+        // Get the last two messages (user + assistant)
+        const recentMessages = messages.slice(-2)
+        
+        recentMessages.forEach(msg => {
+          console.log(`📤 Broadcasting: ${msg.role} - ${msg.content.substring(0, 50)}...`)
+          chatManagerRef.current!.addMessage({
+            id: msg.id,
+            role: msg.role as 'user' | 'assistant',
+            content: msg.content,
+            sender: getUserId(),
+            senderName: getUserName(),
+            timestamp: Date.now()
+          })
         })
+        
+        // Also broadcast the finished message
+        if (message) {
+          console.log(`📤 Broadcasting finished message: ${message.content.substring(0, 50)}...`)
+          chatManagerRef.current.addMessage({
+            id: message.id,
+            role: 'assistant',
+            content: message.content,
+            sender: getUserId(),
+            senderName: getUserName(),
+            timestamp: Date.now()
+          })
+        }
       }
     },
     onError: error => {
@@ -121,10 +142,16 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
         manager.onMessages((collabMessages) => {
           console.log('📨 P2P: Received messages:', collabMessages.length)
           // Convert collaborative messages to AI SDK format
+          // Store sender info in experimental_attachments for display
           const uiMessages: Message[] = collabMessages.map(msg => ({
             id: msg.id,
             role: msg.role,
-            content: msg.content
+            content: msg.content,
+            experimental_attachments: msg.senderName ? [{
+              name: 'sender',
+              contentType: 'text/plain',
+              url: msg.sender
+            }] : undefined
           }))
           setMessages(uiMessages)
         })
@@ -173,18 +200,8 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
-    // Broadcast user message to peers
-    if (chatManagerRef.current && input.trim()) {
-      const messageId = `msg-${Date.now()}`
-      chatManagerRef.current.addMessage({
-        id: messageId,
-        role: 'user',
-        content: input,
-        sender: getUserId(),
-        timestamp: Date.now()
-      })
-    }
-
+    // Don't broadcast here - let onFinish handle it after AI processes
+    // This prevents duplicate messages
     setData(undefined)
     handleSubmit(e)
   }
@@ -275,9 +292,9 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   }
 
   return (
-    <div className="relative flex h-full min-w-0 flex-1 flex-col">
+    <div className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
       {/* Collab header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="flex items-center justify-between px-4 py-3 border-b gap-4 flex-shrink-0">
         <PresenceIndicator peers={peers} currentUserName={getUserName()} />
         <ChatControls 
           chatId={chatId} 
@@ -286,8 +303,11 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
         />
       </div>
 
-      {/* Chat messages */}
-      <div className={cn('relative flex-1', messages.length === 0 ? 'flex items-center justify-center' : '')}>
+      {/* Chat messages - Fixed scrolling */}
+      <div className={cn(
+        'relative flex-1 overflow-y-auto overflow-x-hidden',
+        messages.length === 0 ? 'flex items-center justify-center' : ''
+      )}>
         <ChatMessages
           sections={sections}
           data={data}

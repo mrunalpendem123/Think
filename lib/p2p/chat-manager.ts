@@ -11,6 +11,7 @@ export interface CollaborativeMessage {
   role: 'user' | 'assistant'
   content: string
   sender: string
+  senderName?: string
   timestamp: number
 }
 
