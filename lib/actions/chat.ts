@@ -1,315 +1,138 @@
-'use server'
+/**
+ * Client-side chat actions using IndexedDB
+ * All chat data is stored locally in the browser with encryption
+ */
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-
-import { getRedisClient, RedisWrapper } from '@/lib/redis/config'
 import { type Chat } from '@/lib/types'
+import * as storage from '@/lib/storage/indexeddb'
 
-async function getRedis(): Promise<RedisWrapper | null> {
-  // Check if Redis is configured
-  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL
-  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN
-  const useLocal = process.env.USE_LOCAL_REDIS === 'true'
-  
-  // If neither Redis option is configured, return null
-  if (!useLocal && (!upstashUrl || !upstashToken)) {
-    return null
-  }
-  
-  try {
-  return await getRedisClient()
-  } catch (error) {
-    console.error('Redis connection failed:', error)
-    return null
-  }
-}
-
-const CHAT_VERSION = 'v2'
-function getUserChatKey(userId: string) {
-  return `user:${CHAT_VERSION}:chat:${userId}`
-}
-
-export async function getChats(userId?: string | null) {
+/**
+ * Gets all chats for a user with pagination
+ */
+export async function getChats(
+  userId?: string | null
+): Promise<Chat[]> {
   if (!userId) {
     return []
   }
 
   try {
-    const redis = await getRedis()
-    if (!redis) {
-      // Redis not configured, return empty array
-      return []
-    }
-    
-    const chats = await redis.zrange(getUserChatKey(userId), 0, -1, {
-      rev: true
-    })
-
-    if (chats.length === 0) {
-      return []
-    }
-
-    const results = await Promise.all(
-      chats.map(async chatKey => {
-        const chat = await redis.hgetall(chatKey)
-        return chat
-      })
-    )
-
-    return results
-      .filter((result): result is Record<string, any> => {
-        if (result === null || Object.keys(result).length === 0) {
-          return false
-        }
-        return true
-      })
-      .map(chat => {
-        const plainChat = { ...chat }
-        if (typeof plainChat.messages === 'string') {
-          try {
-            plainChat.messages = JSON.parse(plainChat.messages)
-          } catch (error) {
-            plainChat.messages = []
-          }
-        }
-        if (plainChat.createdAt && !(plainChat.createdAt instanceof Date)) {
-          plainChat.createdAt = new Date(plainChat.createdAt)
-        }
-        return plainChat as Chat
-      })
+    const result = await storage.getChats(userId, 999999, 0)
+    return result.chats
   } catch (error) {
+    console.error('Error getting chats:', error)
     return []
   }
 }
 
+/**
+ * Gets a paginated list of chats
+ */
 export async function getChatsPage(
   userId: string,
   limit = 20,
   offset = 0
 ): Promise<{ chats: Chat[]; nextOffset: number | null }> {
   try {
-    const redis = await getRedis()
-    if (!redis) {
-      return { chats: [], nextOffset: null }
-    }
-    const userChatKey = getUserChatKey(userId)
-    const start = offset
-    const end = offset + limit - 1
-
-    const chatKeys = await redis.zrange(userChatKey, start, end, {
-      rev: true
-    })
-
-    if (chatKeys.length === 0) {
-      return { chats: [], nextOffset: null }
-    }
-
-    const results = await Promise.all(
-      chatKeys.map(async chatKey => {
-        const chat = await redis.hgetall(chatKey)
-        return chat
-      })
-    )
-
-    const chats = results
-      .filter((result): result is Record<string, any> => {
-        if (result === null || Object.keys(result).length === 0) {
-          return false
-        }
-        return true
-      })
-      .map(chat => {
-        const plainChat = { ...chat }
-        if (typeof plainChat.messages === 'string') {
-          try {
-            plainChat.messages = JSON.parse(plainChat.messages)
-          } catch (error) {
-            plainChat.messages = []
-          }
-        }
-        if (plainChat.createdAt && !(plainChat.createdAt instanceof Date)) {
-          plainChat.createdAt = new Date(plainChat.createdAt)
-        }
-        return plainChat as Chat
-      })
-
-    const nextOffset = chatKeys.length === limit ? offset + limit : null
-    return { chats, nextOffset }
+    return await storage.getChats(userId, limit, offset)
   } catch (error) {
     console.error('Error fetching chat page:', error)
     return { chats: [], nextOffset: null }
   }
 }
 
-export async function getChat(id: string, userId: string = 'anonymous') {
-  const redis = await getRedis()
-  if (!redis) {
+/**
+ * Gets a single chat by ID
+ */
+export async function getChat(
+  id: string,
+  userId: string = 'anonymous'
+): Promise<Chat | null> {
+  try {
+    return await storage.getChat(id, userId)
+  } catch (error) {
+    console.error('Error getting chat:', error)
     return null
   }
-  const chat = await redis.hgetall<Chat>(`chat:${id}`)
-
-  if (!chat) {
-    return null
-  }
-
-  // Parse the messages if they're stored as a string
-  if (typeof chat.messages === 'string') {
-    try {
-      chat.messages = JSON.parse(chat.messages)
-    } catch (error) {
-      chat.messages = []
-    }
-  }
-
-  // Ensure messages is always an array
-  if (!Array.isArray(chat.messages)) {
-    chat.messages = []
-  }
-
-  return chat
 }
 
+/**
+ * Clears all chats for a user
+ */
 export async function clearChats(
   userId: string = 'anonymous'
 ): Promise<{ error?: string }> {
-  const redis = await getRedis()
-  if (!redis) {
-    return { error: 'Chat history not available - Redis not configured' }
+  try {
+    await storage.clearChats(userId)
+    
+    // Dispatch event to refresh UI
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('chat-history-updated'))
+    }
+    
+    return {}
+  } catch (error) {
+    console.error('Error clearing chats:', error)
+    return { error: 'Failed to clear chat history' }
   }
-  const userChatKey = getUserChatKey(userId)
-  const chats = await redis.zrange(userChatKey, 0, -1)
-  if (!chats.length) {
-    return { error: 'No chats to clear' }
-  }
-  const pipeline = redis.pipeline()
-
-  for (const chat of chats) {
-    pipeline.del(chat)
-    pipeline.zrem(userChatKey, chat)
-  }
-
-  await pipeline.exec()
-
-  revalidatePath('/')
-  redirect('/')
 }
 
+/**
+ * Deletes a single chat
+ */
 export async function deleteChat(
   chatId: string,
   userId = 'anonymous'
 ): Promise<{ error?: string }> {
   try {
-    const redis = await getRedis()
-    if (!redis) {
-      return { error: 'Chat history not available - Redis not configured' }
+    await storage.deleteChat(chatId, userId)
+    
+    // Dispatch event to refresh UI
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('chat-history-updated'))
     }
-    const userKey = getUserChatKey(userId)
-    const chatKey = `chat:${chatId}`
-
-    const chatDetails = await redis.hgetall<Chat>(chatKey)
-    if (!chatDetails || Object.keys(chatDetails).length === 0) {
-      console.warn(`Attempted to delete non-existent chat: ${chatId}`)
-      return { error: 'Chat not found' }
-    }
-
-    // Optional: Check if the chat actually belongs to the user if userId is provided and matters
-    // if (chatDetails.userId !== userId) {
-    //  console.warn(`Unauthorized attempt to delete chat ${chatId} by user ${userId}`)
-    //  return { error: 'Unauthorized' }
-    // }
-
-    const pipeline = redis.pipeline()
-    pipeline.del(chatKey)
-    pipeline.zrem(userKey, chatKey) // Use chatKey consistently
-    await pipeline.exec()
-
-    // Revalidate the root path where the chat history is displayed
-    revalidatePath('/')
-
+    
     return {}
   } catch (error) {
-    console.error(`Error deleting chat ${chatId}:`, error)
+    console.error('Error deleting chat:', error)
     return { error: 'Failed to delete chat' }
   }
 }
 
-export async function saveChat(chat: Chat, userId: string = 'anonymous') {
+/**
+ * Saves a chat to IndexedDB
+ */
+export async function saveChat(
+  chat: Chat,
+  userId: string = 'anonymous'
+): Promise<void> {
   try {
-    const redis = await getRedis()
-    if (!redis) {
-      // Redis not configured, skip saving (chat still works, just not persisted)
-      return []
-    }
-    
-    const chatKey = `chat:${chat.id}`
-    const userKey = getUserChatKey(userId)
-    
-    const chatToSave = {
-      ...chat,
-      messages: JSON.stringify(chat.messages)
-    }
-
-    // Check if this is a session-based user (anonymous)
-    const isSessionUser = userId.startsWith('session-')
-    
-    if (isSessionUser) {
-      // For session users, set 1-hour expiration
-      await redis.hmset(chatKey, chatToSave)
-      await redis.zadd(userKey, Date.now(), chatKey)
-      
-      // Set expiration (3600 seconds = 1 hour)
-      await redis.expire(chatKey, 3600)
-      await redis.expire(userKey, 3600)
-      
-      return []
-    } else {
-      // For wallet users, no expiration (permanent)
-      const pipeline = redis.pipeline()
-      pipeline.hmset(chatKey, chatToSave)
-      pipeline.zadd(userKey, Date.now(), chatKey)
-      const results = await pipeline.exec()
-      return results
-    }
+    await storage.saveChat(chat, userId)
   } catch (error) {
     console.error('Error saving chat:', error)
-    return []
+    throw error
   }
 }
 
-export async function getSharedChat(id: string) {
-  const redis = await getRedis()
-  if (!redis) {
-    return null
-  }
-  const chat = await redis.hgetall<Chat>(`chat:${id}`)
-
-  if (!chat || !chat.sharePath) {
-    return null
-  }
-
-  return chat
+/**
+ * Gets a shared chat (not applicable for local storage)
+ * Returns null as sharing requires server-side storage
+ */
+export async function getSharedChat(id: string): Promise<Chat | null> {
+  console.warn('Chat sharing is not available with local storage')
+  return null
 }
 
-export async function shareChat(id: string, userId: string = 'anonymous') {
-  const redis = await getRedis()
-  if (!redis) {
-    return {
-      error: 'Chat sharing not available - Redis not configured'
-    }
+/**
+ * Shares a chat (not applicable for local storage)
+ * Returns error as sharing requires server-side storage
+ */
+export async function shareChat(
+  id: string,
+  userId: string = 'anonymous'
+): Promise<{ error?: string } | null> {
+  console.warn('Chat sharing is not available with local storage')
+  return {
+    error: 'Chat sharing is not available with local storage. Please export your chat history instead.'
   }
-  const chat = await redis.hgetall<Chat>(`chat:${id}`)
-
-  if (!chat || chat.userId !== userId) {
-    return null
-  }
-
-  const payload = {
-    ...chat,
-    sharePath: `/share/${id}`
-  }
-
-  await redis.hmset(`chat:${id}`, payload)
-
-  return payload
 }

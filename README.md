@@ -73,11 +73,11 @@ This application is designed with **privacy as the foundation**, not an aftertho
    - Anonymous query execution
    - Secure data extraction
 
-3. **Optional Local Storage**
-   - Chat history stored in YOUR Redis instance (not ours)
-   - Authentication via YOUR Supabase (not shared)
+3. **Browser-Based Local Storage**
+   - Chat history encrypted and stored ONLY in your browser (IndexedDB)
+   - No server-side storage - data never leaves your device
    - Full control over data retention
-   - Can be completely disabled
+   - Export/import functionality for backup
 
 ### What We DON'T Collect
 
@@ -108,14 +108,15 @@ This application is designed with **privacy as the foundation**, not an aftertho
 - 🚫 **No Tracking**: Zero analytics or telemetry
 - 🌐 **Anonymous Search**: Web searches don't reveal your identity
 - 🔒 **Encrypted Communication**: All API calls are encrypted
-- 📝 **Optional History**: Chat history can be completely disabled
+- 💾 **Encrypted Local Storage**: Chat history encrypted in your browser
+- 📤 **Export/Import**: Backup and restore your chat history
 
 ### Optional Features
 
-- 🔄 **Chat History**: Store conversations in your own Redis instance
-- 🔐 **User Authentication**: Optional Supabase-based user accounts
+- 🌐 **Web3 Authentication**: Optional wallet-based user accounts
 - 🎯 **Advanced Search**: Deep search mode for comprehensive results
 - 💾 **Self-Hosted**: Deploy on your own infrastructure
+- 🔐 **Browser-Only Storage**: All data stays on your device
 
 ---
 
@@ -153,13 +154,11 @@ VENICE_API_KEY=your_venice_api_key_here
 # Required - Get from https://parallel.ai/
 PARALLEL_API_KEY=your_parallel_api_key_here
 
-# Optional - For user accounts (can be left commented out)
-# NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-# NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+# Optional - For Web3 wallet connect (can be left commented out)
+# NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_walletconnect_project_id
 
-# Optional - For chat history (can be left commented out)
-# UPSTASH_REDIS_REST_URL=https://your-redis.upstash.io
-# UPSTASH_REDIS_REST_TOKEN=your_redis_token
+# Note: Chat history is stored locally in your browser (IndexedDB)
+# No server-side database required!
 ```
 
 ### Run Locally
@@ -186,9 +185,7 @@ PORT=3001 npm run dev
 ├── app/                    # Next.js App (Pages + API Routes)
 │   ├── api/               # Backend API endpoints
 │   │   ├── chat/          # Chat completions API
-│   │   ├── chats/         # Chat history API
 │   │   └── config/        # Model configuration API
-│   ├── auth/              # Authentication pages
 │   └── *.tsx              # Frontend pages (home, search)
 │
 ├── components/            # Frontend React Components
@@ -202,11 +199,14 @@ PORT=3001 npm run dev
 │   ├── tools/            # Search tool implementations
 │   │   └── search/providers/
 │   │       └── parallel.ts    # Parallel AI integration
+│   ├── storage/          # Local storage layer
+│   │   ├── indexeddb.ts  # IndexedDB implementation
+│   │   ├── encryption.ts # AES-GCM encryption
+│   │   └── export-import.ts # Backup functionality
 │   ├── utils/            # Utilities
 │   │   └── registry.ts   # Venice AI registry
 │   ├── streaming/        # Response streaming
-│   ├── auth/             # Authentication logic
-│   └── supabase/         # Database client
+│   └── web3/             # Web3 wallet integration
 │
 ├── public/               # Static Assets
 │   ├── config/          # Model configurations
@@ -384,9 +384,10 @@ This checks:
 - **Venice AI** - Privacy-focused LLM provider (OpenAI-compatible)
 - **Parallel AI** - Privacy-first web search API
 
-### Optional Services
-- **Supabase** - Authentication & user management (optional)
-- **Upstash Redis** - Chat history persistence (optional)
+### Storage & Privacy
+- **IndexedDB** - Browser-based encrypted storage
+- **Web Crypto API** - AES-GCM encryption for chat history
+- **RainbowKit** - Web3 wallet authentication (optional)
 
 ---
 
@@ -724,7 +725,7 @@ A: DuckDuckGo provides private *search*. We provide private *AI-powered answers*
 A: Yes! Deploy on your own servers. You'll still use Venice/Parallel APIs, but can add your own privacy layers.
 
 **Q: What about chat history?**  
-A: Optional. If enabled, it's stored in *your* Redis instance, not ours. You control retention.
+A: Chat history is stored encrypted in your browser's IndexedDB. It never leaves your device and you can export/import for backup.
 
 **Q: Is it free?**  
 A: The software is open source and free. Venice AI and Parallel AI charge for API usage.

@@ -3,8 +3,11 @@
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 
 import { toast } from 'sonner'
+import { useAccount } from 'wagmi'
 
+import { getChatsPage } from '@/lib/actions/chat'
 import { Chat } from '@/lib/types'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 import {
   SidebarGroup,
@@ -16,30 +19,27 @@ import { ChatHistorySkeleton } from './chat-history-skeleton'
 import { ChatMenuItem } from './chat-menu-item'
 import { ClearHistoryAction } from './clear-history-action'
 
-// interface ChatHistoryClientProps {} // Removed empty interface
-
-interface ChatPageResponse {
-  chats: Chat[]
-  nextOffset: number | null
-}
-
 export function ChatHistoryClient() {
-  // Removed props from function signature
+  const { address, isConnected } = useAccount()
   const [chats, setChats] = useState<Chat[]>([])
   const [nextOffset, setNextOffset] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const loadMoreRef = useRef<HTMLDivElement>(null)
   const [isPending, startTransition] = useTransition()
 
+  // Get current user ID (wallet address or session ID)
+  const getUserId = useCallback(() => {
+    if (isConnected && address) {
+      return address
+    }
+    return getOrCreateSessionId()
+  }, [isConnected, address])
+
   const fetchInitialChats = useCallback(async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/chats?offset=0&limit=20`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch initial chat history')
-      }
-      const { chats: newChats, nextOffset: newNextOffset } =
-        (await response.json()) as ChatPageResponse
+      const userId = getUserId()
+      const { chats: newChats, nextOffset: newNextOffset } = await getChatsPage(userId, 20, 0)
 
       setChats(newChats)
       setNextOffset(newNextOffset)
@@ -50,7 +50,7 @@ export function ChatHistoryClient() {
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, [getUserId])
 
   useEffect(() => {
     fetchInitialChats()
@@ -73,12 +73,8 @@ export function ChatHistoryClient() {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`/api/chats?offset=${nextOffset}&limit=20`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch more chat history')
-      }
-      const { chats: newChats, nextOffset: newNextOffset } =
-        (await response.json()) as ChatPageResponse
+      const userId = getUserId()
+      const { chats: newChats, nextOffset: newNextOffset } = await getChatsPage(userId, 20, nextOffset)
 
       setChats(prevChats => [...prevChats, ...newChats])
       setNextOffset(newNextOffset)
@@ -89,7 +85,7 @@ export function ChatHistoryClient() {
     } finally {
       setIsLoading(false)
     }
-  }, [nextOffset, isLoading])
+  }, [nextOffset, isLoading, getUserId])
 
   useEffect(() => {
     const observerRefValue = loadMoreRef.current

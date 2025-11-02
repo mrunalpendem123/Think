@@ -6,8 +6,11 @@ import { usePathname, useRouter } from 'next/navigation'
 
 import { MoreHorizontal, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAccount } from 'wagmi'
 
+import { deleteChat } from '@/lib/actions/chat'
 import { Chat } from '@/lib/types'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 import {
   AlertDialog,
@@ -77,6 +80,7 @@ const formatDateWithTime = (date: Date | string) => {
 }
 
 export function ChatMenuItem({ chat }: ChatMenuItemProps) {
+  const { address, isConnected } = useAccount()
   const pathname = usePathname()
   const isActive = pathname === chat.path
   const router = useRouter()
@@ -84,30 +88,36 @@ export function ChatMenuItem({ chat }: ChatMenuItemProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [dialogOpen, setDialogOpen] = useState(false)
 
+  const getUserId = () => {
+    if (isConnected && address) {
+      return address
+    }
+    return getOrCreateSessionId()
+  }
+
   const onDelete = () => {
     startTransition(async () => {
       try {
-        const res = await fetch(`/api/chat/${chat.id}`, { method: 'DELETE' })
+        const userId = getUserId()
+        const res = await deleteChat(chat.id, userId)
 
-        if (!res.ok) {
-          const errorData = await res.json()
-          throw new Error(errorData.error || 'Failed to delete chat')
+        if (res.error) {
+          throw new Error(res.error)
         }
 
         toast.success('Chat deleted')
-        setIsMenuOpen(false) // Close menu on success
-        setDialogOpen(false) // Close dialog on success
+        setIsMenuOpen(false)
+        setDialogOpen(false)
 
         // If deleting the currently active chat, navigate home
         if (isActive) {
           router.push('/')
         }
-        window.dispatchEvent(new CustomEvent('chat-history-updated'))
       } catch (error) {
         console.error('Failed to delete chat:', error)
         toast.error((error as Error).message || 'Failed to delete chat')
-        setIsMenuOpen(false) // Close menu on error
-        setDialogOpen(false) // Close dialog on error
+        setIsMenuOpen(false)
+        setDialogOpen(false)
       }
     })
   }

@@ -29,7 +29,7 @@
 3. Click **Settings** (top menu)
 4. Click **Environment Variables** (left sidebar)
 
-### Add ALL 6 variables:
+### Add ALL 3 variables:
 
 **For EACH variable:**
 - Click **"Add New"**
@@ -45,34 +45,18 @@
 **Variable 1:**
 ```
 Key: VENICE_API_KEY
-Value: 5veQ8IP7eF-x9xvpn-XK0vQPvRC3L8QoyDW-q8o1pX
+Value: YOUR_VENICE_API_KEY_HERE
 ```
+(Get from https://venice.ai/)
 
 **Variable 2:**
 ```
 Key: PARALLEL_API_KEY
-Value: sawKl_nOFldN78HAQHFwxixaj90aySp4PTa6trRx
+Value: YOUR_PARALLEL_API_KEY_HERE
 ```
+(Get from https://parallel.ai/)
 
-**Variable 3:**
-```
-Key: UPSTASH_REDIS_REST_URL
-Value: https://safe-oriole-32099.upstash.io
-```
-
-**Variable 4:**
-```
-Key: UPSTASH_REDIS_REST_TOKEN
-Value: AX1jAAIncDJkNmVkMzgxNDQ5N2M0Y2M3YjdlYjQ5NTQyNTA0ZTYyY3AyMzIwOTk
-```
-
-**Variable 5:**
-```
-Key: ENABLE_SAVE_CHAT_HISTORY
-Value: true
-```
-
-**Variable 6:** ⚠️ **USE YOUR PROJECT ID FROM STEP 1!**
+**Variable 3:** ⚠️ **USE YOUR PROJECT ID FROM STEP 1!**
 ```
 Key: NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 Value: YOUR_PROJECT_ID_HERE
@@ -80,9 +64,19 @@ Value: YOUR_PROJECT_ID_HERE
 
 ---
 
+### 📝 **Note: Chat History is Stored Locally!**
+
+Chat history is now stored encrypted in the user's browser (IndexedDB).
+**No server-side database required!** This means:
+- ✅ Maximum privacy - data never leaves the user's device
+- ✅ No Redis or database setup needed
+- ✅ Users can export/import their chat history for backup
+
+---
+
 ## 🔄 STEP 3: Redeploy
 
-After adding all 6 variables:
+After adding all 3 variables:
 
 1. Go to **Deployments** tab (top menu)
 2. Find the latest deployment (should say "Failed" or "Building")
@@ -97,16 +91,13 @@ After adding all 6 variables:
 ## ✅ CHECKLIST:
 
 - [ ] Created WalletConnect Project ID at cloud.walletconnect.com
-- [ ] Added `VENICE_API_KEY` to Vercel
-- [ ] Added `PARALLEL_API_KEY` to Vercel
-- [ ] Added `UPSTASH_REDIS_REST_URL` to Vercel
-- [ ] Added `UPSTASH_REDIS_REST_TOKEN` to Vercel
-- [ ] Added `ENABLE_SAVE_CHAT_HISTORY` to Vercel
+- [ ] Added `VENICE_API_KEY` to Vercel (your own key)
+- [ ] Added `PARALLEL_API_KEY` to Vercel (your own key)
 - [ ] Added `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` to Vercel (YOUR OWN!)
 - [ ] Clicked "Redeploy" in Vercel
 - [ ] Deployment succeeded (green checkmark)
 - [ ] Tested wallet connection
-- [ ] Tested chat history
+- [ ] Tested chat history (stored locally in browser)
 
 ---
 
@@ -139,7 +130,7 @@ After adding all 6 variables:
 
 **"403 Forbidden"** → Need YOUR OWN WalletConnect Project ID (not the fallback)
 
-**"Chat history empty"** → Missing `ENABLE_SAVE_CHAT_HISTORY=true` or Redis credentials
+**"Chat history not persisting"** → Clear browser cache and IndexedDB, check browser console for errors
 
 ---
 
@@ -147,8 +138,9 @@ After adding all 6 variables:
 
 ✅ **Private AI Search** - Venice AI (no data retention)  
 ✅ **Private Web Search** - Parallel AI (no tracking)  
-✅ **Wallet Login** - RainbowKit (200+ wallets)  
-✅ **Chat History** - Redis (your wallet = your data)  
+✅ **Wallet Login** - RainbowKit (200+ wallets, optional)  
+✅ **Local Chat History** - IndexedDB (encrypted in browser, never leaves device)  
+✅ **Export/Import** - Backup and restore your chat history  
 ✅ **Multi-Chain** - Polygon, Ethereum, Optimism, Arbitrum, Base  
 
 **Zero personal information collected. Maximum privacy.** 🔐

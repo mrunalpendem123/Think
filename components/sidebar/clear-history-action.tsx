@@ -4,8 +4,10 @@ import { useState, useTransition } from 'react'
 
 import { MoreHorizontal, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useAccount } from 'wagmi'
 
 import { clearChats } from '@/lib/actions/chat'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 import {
   AlertDialog,
@@ -27,20 +29,30 @@ import {
 import { SidebarGroupAction } from '@/components/ui/sidebar'
 import { Spinner } from '@/components/ui/spinner'
 
+import { ExportImportActions } from './export-import-actions'
+
 interface ClearHistoryActionProps {
   empty: boolean
 }
 
 export function ClearHistoryAction({ empty }: ClearHistoryActionProps) {
+  const { address, isConnected } = useAccount()
   const [isPending, start] = useTransition()
   const [open, setOpen] = useState(false)
 
+  const getUserId = () => {
+    if (isConnected && address) {
+      return address
+    }
+    return getOrCreateSessionId()
+  }
+
   const onClear = () =>
     start(async () => {
-      const res = await clearChats()
+      const userId = getUserId()
+      const res = await clearChats(userId)
       res?.error ? toast.error(res.error) : toast.success('History cleared')
       setOpen(false)
-      window.dispatchEvent(new CustomEvent('chat-history-updated'))
     })
 
   return (
@@ -53,6 +65,8 @@ export function ClearHistoryAction({ empty }: ClearHistoryActionProps) {
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end">
+        <ExportImportActions />
+        
         <AlertDialog open={open} onOpenChange={setOpen}>
           <AlertDialogTrigger asChild>
             <DropdownMenuItem

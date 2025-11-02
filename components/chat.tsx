@@ -6,7 +6,9 @@ import { useChat } from '@ai-sdk/react'
 import { ChatRequestOptions } from 'ai'
 import { Message } from 'ai/react'
 import { toast } from 'sonner'
+import { useAccount } from 'wagmi'
 
+import { saveChat } from '@/lib/actions/chat'
 import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
 import { setCookie } from '@/lib/utils/cookies'
@@ -33,8 +35,17 @@ export function Chat({
   query?: string
   models?: Model[]
 }) {
+  const { address, isConnected } = useAccount()
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
+
+  // Get current user ID
+  const getUserId = () => {
+    if (isConnected && address) {
+      return address
+    }
+    return getOrCreateSessionId()
+  }
 
   const {
     messages,
@@ -55,7 +66,7 @@ export function Chat({
     body: {
       id
     },
-    onFinish: () => {
+    onFinish: async () => {
       // Only update URL if we're on the home page (new chat)
       // Don't update if we're already on a search page to avoid hijacking navigation
       if (window.location.pathname === '/') {
@@ -77,6 +88,29 @@ export function Chat({
     const sessionId = getOrCreateSessionId()
     setCookie('session-id', sessionId)
   }, [])
+
+  // Save chat to IndexedDB after messages change
+  useEffect(() => {
+    // Only save if we have messages and not currently loading
+    if (messages.length > 0 && !isLoading) {
+      const userId = getUserId()
+      const title = messages[0]?.content || 'New Chat'
+      
+      saveChat(
+        {
+          id,
+          title,
+          createdAt: new Date(),
+          userId,
+          path: `/search/${id}`,
+          messages
+        },
+        userId
+      ).catch(error => {
+        console.error('Failed to save chat to IndexedDB:', error)
+      })
+    }
+  }, [messages, isLoading, id, isConnected, address])
 
   // Convert messages array to sections array
   const sections = useMemo<ChatSection[]>(() => {

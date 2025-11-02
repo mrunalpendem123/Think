@@ -37,15 +37,17 @@ Go to: **Vercel Dashboard → Your Project → Settings → Environment Variable
 Add these for **ALL 3 environments** (Production, Preview, Development):
 
 ```bash
-VENICE_API_KEY=5veQ8IP7eF-x9xvpn-XK0vQPvRC3L8QoyDW-q8o1pX
-PARALLEL_API_KEY=sawKl_nOFldN78HAQHFwxixaj90aySp4PTa6trRx
-UPSTASH_REDIS_REST_URL=https://safe-oriole-32099.upstash.io
-UPSTASH_REDIS_REST_TOKEN=AX1jAAIncDJkNmVkMzgxNDQ5N2M0Y2M3YjdlYjQ5NTQyNTA0ZTYyY3AyMzIwOTk
-ENABLE_SAVE_CHAT_HISTORY=true
+VENICE_API_KEY=YOUR_VENICE_API_KEY_HERE
+PARALLEL_API_KEY=YOUR_PARALLEL_API_KEY_HERE
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=YOUR_PROJECT_ID_HERE
 ```
 
-**⚠️ IMPORTANT:** Replace `YOUR_PROJECT_ID_HERE` with the ID from step 1!
+**⚠️ IMPORTANT:**  
+- Replace `YOUR_VENICE_API_KEY_HERE` with your key from https://venice.ai/
+- Replace `YOUR_PARALLEL_API_KEY_HERE` with your key from https://parallel.ai/
+- Replace `YOUR_PROJECT_ID_HERE` with the WalletConnect ID from step 1!
+
+**📝 Note:** No Redis/database needed! Chat history is stored encrypted in the user's browser.
 
 ### 3️⃣ Redeploy
 
@@ -59,35 +61,35 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=YOUR_PROJECT_ID_HERE
 ## 🧪 TEST CHAT HISTORY (After Deployment)
 
 1. Open your deployed app
-2. **Connect Wallet** (MetaMask/Coinbase/etc.)
+2. **Connect Wallet** (MetaMask/Coinbase/etc.) - Optional!
 3. Enable **Search toggle** (blue switch)
 4. Ask: "what movies are playing in hyderabad?"
 5. **Check left sidebar** → Chat should appear!
-6. Disconnect wallet
-7. Reconnect same wallet
-8. ✅ **Chat history loads!**
+6. Refresh the page
+7. ✅ **Chat history loads from IndexedDB!**
+8. Try **Export History** from the sidebar menu
+9. ✅ **Chat history downloads as JSON!**
 
 ---
 
 ## 🔍 If Chat History Still Not Working:
 
-### Check Vercel Logs:
-1. Vercel Dashboard → Deployments → Latest
-2. Click **View Function Logs**
-3. Look for Redis or chat history errors
+### Check Browser Console:
+1. Open browser DevTools (F12)
+2. Go to **Console** tab
+3. Look for IndexedDB or encryption errors
 
 ### Verify Environment Variables:
-- All 6 variables added? ✓
+- All 3 variables added? ✓
 - Added to all 3 environments? ✓
 - No typos? ✓
-- `ENABLE_SAVE_CHAT_HISTORY=true` (not `'true'`)? ✓
+- WalletConnect Project ID correct? ✓
 
-### Test Redis Connection:
-1. Go to: https://console.upstash.com
-2. Click your Redis instance
-3. Go to **CLI** tab
-4. Run: `KEYS user:v2:chat:*`
-5. Should see: `1) "user:v2:chat:YOUR_WALLET_ADDRESS:CHAT_ID"`
+### Check Browser Storage:
+1. Open DevTools → Application tab
+2. Go to **IndexedDB** → `private-search-ai`
+3. Should see `chats` object store
+4. Chat data is encrypted (you'll see encoded strings)
 
 ---
 
@@ -95,8 +97,9 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=YOUR_PROJECT_ID_HERE
 
 ✅ **Local Dev:** http://localhost:3001  
 ✅ **All webpack errors fixed**  
-✅ **Chat history with Redis**  
-✅ **Wallet authentication**  
+✅ **Chat history with IndexedDB (encrypted, browser-only)**  
+✅ **Export/Import functionality**  
+✅ **Wallet authentication (optional)**  
 ✅ **Venice AI + Parallel AI**  
 ✅ **Ready for Vercel deployment**  
 
@@ -108,18 +111,20 @@ NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=YOUR_PROJECT_ID_HERE
 |-------|----------|
 | Build fails with module errors | Check webpack config in `next.config.mjs` |
 | 403 on WalletConnect | Use YOUR OWN project ID from cloud.walletconnect.com |
-| Chat history empty | 1. Connect wallet 2. Check `ENABLE_SAVE_CHAT_HISTORY=true` 3. Verify Redis credentials |
-| "anonymous" user | You're not connected to a wallet - click "Connect Wallet" |
+| Chat history empty | Check browser console for IndexedDB errors, try clearing browser cache |
+| Chat not persisting | Check if IndexedDB is enabled in browser, not in incognito mode |
+| "anonymous" user | Normal! You can use the app without connecting a wallet |
 
 ---
 
-## 📝 Files Changed:
+## 📝 Key Files:
 
+- `lib/storage/indexeddb.ts` - Browser-based storage with encryption
+- `lib/storage/encryption.ts` - AES-GCM encryption for chat history
+- `lib/storage/export-import.ts` - Backup and restore functionality
+- `lib/actions/chat.ts` - Client-side chat management
+- `components/sidebar/export-import-actions.tsx` - Export/Import UI
 - `next.config.mjs` - Webpack fallbacks for dependencies
-- `app/api/config/models/route.ts` - Made route dynamic
-- `components/wallet-connect-button.tsx` - Replaced img with Image
-- `app/api/chats/route.ts` - Wallet auth for history
-- `app/api/chat/[id]/route.ts` - Wallet auth for delete
 
 ---
 
