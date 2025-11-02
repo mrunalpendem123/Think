@@ -39,12 +39,14 @@ export function ChatHistoryClient() {
     setIsLoading(true)
     try {
       const userId = getUserId()
+      console.log('📜 History: Loading chats for userId:', userId)
       const { chats: newChats, nextOffset: newNextOffset } = await getChatsPage(userId, 20, 0)
+      console.log('📜 History: Loaded', newChats.length, 'chats')
 
       setChats(newChats)
       setNextOffset(newNextOffset)
     } catch (error) {
-      console.error('Failed to load initial chats:', error)
+      console.error('❌ History: Failed to load chats:', error)
       toast.error('Failed to load chat history.')
       setNextOffset(null)
     } finally {

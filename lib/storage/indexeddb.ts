@@ -43,10 +43,13 @@ function openDatabase(): Promise<IDBDatabase> {
  */
 export async function saveChat(chat: Chat, userId: string): Promise<void> {
   try {
+    console.log('💾 IndexedDB: Starting save for chat:', chat.id, 'userId:', userId)
     const db = await openDatabase()
+    console.log('💾 IndexedDB: Database opened')
     
     // Encrypt the messages
     const encryptedMessages = await encrypt(JSON.stringify(chat.messages), userId)
+    console.log('💾 IndexedDB: Messages encrypted')
     
     const chatToSave = {
       ...chat,
@@ -60,13 +63,22 @@ export async function saveChat(chat: Chat, userId: string): Promise<void> {
       const store = transaction.objectStore(CHATS_STORE)
       const request = store.put(chatToSave)
 
-      request.onsuccess = () => resolve()
-      request.onerror = () => reject(request.error)
+      request.onsuccess = () => {
+        console.log('✅ IndexedDB: Chat saved successfully!', chat.id)
+        resolve()
+      }
+      request.onerror = () => {
+        console.error('❌ IndexedDB: Save failed:', request.error)
+        reject(request.error)
+      }
       
-      transaction.oncomplete = () => db.close()
+      transaction.oncomplete = () => {
+        console.log('💾 IndexedDB: Transaction complete, database closed')
+        db.close()
+      }
     })
   } catch (error) {
-    console.error('Failed to save chat:', error)
+    console.error('❌ IndexedDB: Failed to save chat:', error)
     throw error
   }
 }

@@ -96,6 +96,13 @@ export function Chat({
       const userId = getUserId()
       const title = messages[0]?.content || 'New Chat'
       
+      console.log('🔄 Chat: Attempting to save...', {
+        id,
+        messageCount: messages.length,
+        userId,
+        isLoading
+      })
+      
       saveChat(
         {
           id,
@@ -106,8 +113,15 @@ export function Chat({
           messages
         },
         userId
-      ).catch(error => {
-        console.error('Failed to save chat to IndexedDB:', error)
+      ).then(() => {
+        console.log('✅ Chat: Save successful!')
+      }).catch(error => {
+        console.error('❌ Chat: Failed to save to IndexedDB:', error)
+      })
+    } else {
+      console.log('⏭️ Chat: Skipping save', {
+        hasMessages: messages.length > 0,
+        isLoading
       })
     }
   }, [messages, isLoading, id, isConnected, address, getUserId])
