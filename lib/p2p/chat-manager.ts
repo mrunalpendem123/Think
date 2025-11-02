@@ -40,13 +40,21 @@ export class ChatManager {
    * Initialize the collaborative chat
    */
   async connect() {
+    console.log('🔗 P2P: Initializing connection...')
+    console.log('   Chat ID:', this.chatId)
+    console.log('   User ID:', this.userId)
+    console.log('   User Name:', this.userName)
+
     // Create Y.js document
     this.ydoc = new Y.Doc()
+    console.log('📄 Y.js document created')
 
     // Get or create messages array
     this.messages = this.ydoc.getArray<CollaborativeMessage>('messages')
+    console.log('📨 Messages array initialized')
 
     // Create WebRTC provider for P2P sync
+    console.log('🌐 Creating WebRTC provider...')
     this.provider = new WebrtcProvider(this.chatId, this.ydoc, {
       signaling: [
         'wss://signaling.yjs.dev', // Free public signaling server
@@ -72,7 +80,17 @@ export class ChatManager {
       isTyping: false
     })
 
-    console.log('🔗 P2P: Connected to chat:', this.chatId)
+    // Log connection events
+    this.provider.on('status', (event: any) => {
+      console.log('📡 WebRTC Status:', event.status)
+    })
+
+    this.provider.on('peers', (event: any) => {
+      console.log('👥 Peers changed:', event.added, 'added,', event.removed, 'removed')
+      console.log('   Total peers connected:', this.provider?.peers?.size || 0)
+    })
+
+    console.log('✅ P2P: Connected to chat:', this.chatId)
   }
 
   /**

@@ -37,20 +37,27 @@ export function ChatControls({ chatId, peerCount, onLeave }: ChatControlsProps) 
     : ''
 
   const handleCopyLink = async () => {
+    console.log('📋 Copy button clicked, URL:', chatUrl)
     try {
       await navigator.clipboard.writeText(chatUrl)
       setCopied(true)
       toast.success('Chat link copied!')
+      console.log('✅ Link copied successfully')
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
+      console.error('❌ Copy failed:', error)
       toast.error('Failed to copy link')
     }
   }
 
   const handleLeave = () => {
+    console.log('🚪 Leave button clicked')
     if (confirm('Leave this collaborative chat? You can rejoin with the link.')) {
+      console.log('✅ User confirmed leave')
       onLeave()
       toast.success('Left collaborative chat')
+    } else {
+      console.log('❌ User cancelled leave')
     }
   }
 

@@ -166,9 +166,14 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   }
 
   const handleLeave = () => {
+    console.log('🚪 handleLeave called in CollaborativeChat')
     if (chatManagerRef.current) {
+      console.log('🔌 Disconnecting P2P chat manager')
       chatManagerRef.current.disconnect()
+    } else {
+      console.warn('⚠️ Chat manager not initialized')
     }
+    console.log('🏠 Redirecting to homepage')
     window.location.href = '/'
   }
 
