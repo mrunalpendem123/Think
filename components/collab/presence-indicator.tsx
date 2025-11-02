@@ -25,59 +25,62 @@ export function PresenceIndicator({ peers, currentUserName }: PresenceIndicatorP
   const totalUsers = peers.length + 1 // +1 for current user
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-3 px-3 py-1.5 bg-muted rounded-full min-w-0 flex-shrink">
-        <div className="flex items-center gap-2">
-          <Users size={14} className="text-muted-foreground flex-shrink-0" />
-          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-            {totalUsers} {totalUsers === 1 ? 'user' : 'users'}
-          </span>
-        </div>
-        <div className="flex -space-x-2 flex-shrink-0">
-          {/* Current user */}
-          <Tooltip>
-            <TooltipTrigger>
-              <Avatar className="size-6 border-2 border-background">
-                <AvatarFallback className="text-xs bg-primary text-primary-foreground">
-                  You
-                </AvatarFallback>
-              </Avatar>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{currentUserName} (You)</p>
-            </TooltipContent>
-          </Tooltip>
-
-          {/* Other peers */}
-          {peers.slice(0, 5).map((peer) => (
-            <Tooltip key={peer.id}>
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-full">
+        <Users size={14} className="text-muted-foreground" />
+        <span className="text-sm font-medium">
+          {totalUsers} {totalUsers === 1 ? 'user' : 'users'}
+        </span>
+      </div>
+      
+      {totalUsers > 1 && (
+        <TooltipProvider>
+          <div className="flex -space-x-2">
+            {/* Current user */}
+            <Tooltip>
               <TooltipTrigger>
-                <Avatar className="size-6 border-2 border-background">
-                  <AvatarFallback
-                    className="text-xs"
-                    style={{ backgroundColor: peer.color }}
-                  >
-                    {peer.name.charAt(0).toUpperCase()}
+                <Avatar className="size-7 border-2 border-background">
+                  <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                    {currentUserName.charAt(0).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </TooltipTrigger>
               <TooltipContent>
-                <p>{peer.name}</p>
+                <p>{currentUserName} (You)</p>
               </TooltipContent>
             </Tooltip>
-          ))}
 
-          {/* Show count if more than 5 peers */}
-          {peers.length > 5 && (
-            <Avatar className="size-6 border-2 border-background flex-shrink-0">
-              <AvatarFallback className="text-xs bg-muted-foreground text-background">
-                +{peers.length - 5}
-              </AvatarFallback>
-            </Avatar>
-          )}
-        </div>
-      </div>
-    </TooltipProvider>
+            {/* Other peers */}
+            {peers.slice(0, 3).map((peer) => (
+              <Tooltip key={peer.id}>
+                <TooltipTrigger>
+                  <Avatar className="size-7 border-2 border-background">
+                    <AvatarFallback
+                      className="text-xs text-white"
+                      style={{ backgroundColor: peer.color }}
+                    >
+                      {peer.name.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{peer.name}</p>
+                </TooltipContent>
+              </Tooltip>
+            ))}
+
+            {/* Show count if more than 3 peers */}
+            {peers.length > 3 && (
+              <Avatar className="size-7 border-2 border-background">
+                <AvatarFallback className="text-xs bg-muted-foreground text-white">
+                  +{peers.length - 3}
+                </AvatarFallback>
+              </Avatar>
+            )}
+          </div>
+        </TooltipProvider>
+      )}
+    </div>
   )
 }
 

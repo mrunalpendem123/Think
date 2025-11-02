@@ -37,6 +37,8 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   const chatManagerRef = useRef<ChatManager | null>(null)
   const [peers, setPeers] = useState<Peer[]>([])
   const [isConnecting, setIsConnecting] = useState(true)
+  const broadcastedMessagesRef = useRef<Set<string>>(new Set())
+  const isReceivingRef = useRef(false)
 
   // Get user info
   const getUserId = useCallback(() => {
@@ -69,40 +71,6 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   } = useChat({
     id: chatId,
     body: { id: chatId },
-    onFinish: (message) => {
-      // Broadcast BOTH user message and AI response to peers
-      console.log('🤖 AI finished, broadcasting messages')
-      
-      if (chatManagerRef.current) {
-        // Get the last two messages (user + assistant)
-        const recentMessages = messages.slice(-2)
-        
-        recentMessages.forEach(msg => {
-          console.log(`📤 Broadcasting: ${msg.role} - ${msg.content.substring(0, 50)}...`)
-          chatManagerRef.current!.addMessage({
-            id: msg.id,
-            role: msg.role as 'user' | 'assistant',
-            content: msg.content,
-            sender: getUserId(),
-            senderName: getUserName(),
-            timestamp: Date.now()
-          })
-        })
-        
-        // Also broadcast the finished message
-        if (message) {
-          console.log(`📤 Broadcasting finished message: ${message.content.substring(0, 50)}...`)
-          chatManagerRef.current.addMessage({
-            id: message.id,
-            role: 'assistant',
-            content: message.content,
-            sender: getUserId(),
-            senderName: getUserName(),
-            timestamp: Date.now()
-          })
-        }
-      }
-    },
     onError: error => {
       toast.error(`Error in chat: ${error.message}`)
     },
@@ -111,6 +79,36 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   })
 
   const isLoading = status === 'submitted' || status === 'streaming'
+
+  // Broadcast messages AFTER they update in React state
+  useEffect(() => {
+    if (!chatManagerRef.current || messages.length === 0 || isReceivingRef.current) {
+      return
+    }
+
+    console.log('💬 Messages updated, checking for new messages to broadcast')
+    console.log('   Total messages:', messages.length)
+    console.log('   Broadcasted count:', broadcastedMessagesRef.current.size)
+
+    // Find messages that haven't been broadcast yet
+    messages.forEach(msg => {
+      if (!broadcastedMessagesRef.current.has(msg.id)) {
+        console.log(`📤 Broadcasting NEW message: [${msg.role}] ${msg.content.substring(0, 50)}...`)
+        
+        chatManagerRef.current!.addMessage({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          sender: getUserId(),
+          senderName: getUserName(),
+          timestamp: Date.now()
+        })
+        
+        broadcastedMessagesRef.current.add(msg.id)
+        console.log(`✅ Broadcasted message ${msg.id}`)
+      }
+    })
+  }, [messages, getUserId, getUserName])
 
   // Initialize P2P chat manager
   useEffect(() => {
@@ -140,20 +138,36 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
 
         // Listen for messages from peers
         manager.onMessages((collabMessages) => {
-          console.log('📨 P2P: Received messages:', collabMessages.length)
+          console.log('📨 P2P: Received', collabMessages.length, 'messages from peers')
+          
+          // Set flag to prevent re-broadcasting received messages
+          isReceivingRef.current = true
+          
           // Convert collaborative messages to AI SDK format
-          // Store sender info in experimental_attachments for display
-          const uiMessages: Message[] = collabMessages.map(msg => ({
-            id: msg.id,
-            role: msg.role,
-            content: msg.content,
-            experimental_attachments: msg.senderName ? [{
-              name: 'sender',
-              contentType: 'text/plain',
-              url: msg.sender
-            }] : undefined
-          }))
+          const uiMessages: Message[] = collabMessages.map(msg => {
+            console.log(`  📥 Message from ${msg.senderName}: [${msg.role}] ${msg.content.substring(0, 30)}...`)
+            
+            // Mark as already broadcast
+            broadcastedMessagesRef.current.add(msg.id)
+            
+            return {
+              id: msg.id,
+              role: msg.role,
+              content: msg.content,
+              experimental_attachments: msg.senderName ? [{
+                name: 'sender',
+                contentType: 'text/plain',
+                url: msg.sender
+              }] : undefined
+            }
+          })
+          
           setMessages(uiMessages)
+          
+          // Reset flag after a short delay
+          setTimeout(() => {
+            isReceivingRef.current = false
+          }, 100)
         })
 
         // Listen for peer changes
@@ -186,12 +200,15 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
   // Broadcast typing status
   useEffect(() => {
     if (chatManagerRef.current && input.length > 0) {
+      console.log('⌨️ User is typing...')
       chatManagerRef.current.setTyping(true)
       const timeout = setTimeout(() => {
+        console.log('⌨️ Typing stopped')
         chatManagerRef.current?.setTyping(false)
       }, 1000)
       return () => clearTimeout(timeout)
-    } else if (chatManagerRef.current) {
+    } else if (chatManagerRef.current && input.length === 0) {
+      console.log('⌨️ Input cleared, stop typing')
       chatManagerRef.current.setTyping(false)
     }
   }, [input])
@@ -257,29 +274,6 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
     return () => container.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Convert messages to sections (same as regular chat)
-  const sections = []
-  let currentSection: any = null
-
-  for (const message of messages) {
-    if (message.role === 'user') {
-      if (currentSection) {
-        sections.push(currentSection)
-      }
-      currentSection = {
-        id: message.id,
-        userMessage: message,
-        assistantMessages: []
-      }
-    } else if (currentSection && message.role === 'assistant') {
-      currentSection.assistantMessages.push(message)
-    }
-  }
-
-  if (currentSection) {
-    sections.push(currentSection)
-  }
-
   if (isConnecting) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -293,32 +287,98 @@ export function CollaborativeChat({ chatId, models }: CollaborativeChatProps) {
 
   return (
     <div className="relative flex h-full min-w-0 flex-1 flex-col overflow-hidden">
-      {/* Collab header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b gap-4 flex-shrink-0">
-        <PresenceIndicator peers={peers} currentUserName={getUserName()} />
-        <ChatControls 
-          chatId={chatId} 
-          peerCount={peers.length}
-          onLeave={handleLeave}
-        />
+      {/* Collab header - Liveblocks style */}
+      <div className="flex items-center justify-between px-6 py-3 border-b flex-shrink-0">
+        {/* Left: Presence */}
+        <div className="flex items-center gap-3">
+          <PresenceIndicator peers={peers} currentUserName={getUserName()} />
+        </div>
+        
+        {/* Right: Action buttons */}
+        <div className="flex items-center gap-2">
+          <ChatControls 
+            chatId={chatId} 
+            peerCount={peers.length}
+            onLeave={handleLeave}
+          />
+        </div>
       </div>
 
       {/* Chat messages - Fixed scrolling */}
-      <div className={cn(
-        'relative flex-1 overflow-y-auto overflow-x-hidden',
-        messages.length === 0 ? 'flex items-center justify-center' : ''
-      )}>
-        <ChatMessages
-          sections={sections}
-          data={data}
-          onQuerySelect={(query) => append({ role: 'user', content: query })}
-          isLoading={isLoading}
-          chatId={chatId}
-          addToolResult={addToolResult}
-          scrollContainerRef={scrollContainerRef}
-          onUpdateMessage={async () => {}}
-          reload={handleReloadFrom}
-        />
+      <div 
+        ref={scrollContainerRef}
+        className={cn(
+          'relative flex-1 overflow-y-auto overflow-x-hidden px-4 py-4',
+          messages.length === 0 ? 'flex items-center justify-center' : ''
+        )}
+      >
+        {messages.length === 0 ? (
+          <div className="text-center text-muted-foreground">
+            <p className="text-lg mb-2">Collaborative Chat Started!</p>
+            <p className="text-sm">Share the link to invite others to join this conversation.</p>
+          </div>
+        ) : (
+          <div className="space-y-4 max-w-4xl mx-auto">
+            {messages.map((message, index) => {
+              const senderInfo = message.experimental_attachments?.find(a => a.name === 'sender')
+              const senderId = senderInfo?.url || ''
+              const isCurrentUser = senderId === getUserId()
+              
+              // Get sender name from peers or use current user
+              let senderName = 'Anonymous'
+              let senderColor = '#6B7280'
+              
+              if (isCurrentUser) {
+                senderName = getUserName()
+                senderColor = '#6366f1'
+              } else {
+                const peer = peers.find(p => p.id === senderId)
+                if (peer) {
+                  senderName = peer.name
+                  senderColor = peer.color
+                }
+              }
+              
+              return (
+                <div key={message.id} className={cn(
+                  'flex flex-col gap-1',
+                  message.role === 'user' ? 'items-end' : 'items-start'
+                )}>
+                  {/* Sender name for user messages */}
+                  {message.role === 'user' && (
+                    <div className="px-3">
+                      <span
+                        className="text-xs font-medium"
+                        style={{ color: senderColor }}
+                      >
+                        {isCurrentUser ? `${senderName} (You)` : senderName}
+                      </span>
+                    </div>
+                  )}
+                  
+                  {/* Message content */}
+                  <div className={cn(
+                    'rounded-2xl px-4 py-2.5 max-w-[75%] break-words',
+                    message.role === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-foreground'
+                  )}>
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  </div>
+                  
+                  {/* AI label */}
+                  {message.role === 'assistant' && (
+                    <div className="px-3">
+                      <span className="text-xs text-muted-foreground">
+                        AI Assistant
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       {/* Typing indicator */}
