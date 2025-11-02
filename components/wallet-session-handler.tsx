@@ -5,6 +5,7 @@ import { useEffect } from 'react'
 import { useAccount } from 'wagmi'
 
 import { setCookie } from '@/lib/utils/cookies'
+import { clearSessionId } from '@/lib/utils/session'
 
 export function WalletSessionHandler() {
   const { address, isConnected } = useAccount()
@@ -13,6 +14,7 @@ export function WalletSessionHandler() {
     if (isConnected && address) {
       // Save wallet address to cookies for server-side access
       setCookie('wallet-address', address)
+      clearSessionId() // Clear anonymous session when wallet connects
       console.log('Wallet connected:', address)
     } else {
       // Clear wallet address when disconnected

@@ -9,6 +9,8 @@ import { toast } from 'sonner'
 
 import { Model } from '@/lib/types/models'
 import { cn } from '@/lib/utils'
+import { setCookie } from '@/lib/utils/cookies'
+import { getOrCreateSessionId } from '@/lib/utils/session'
 
 import { ChatMessages } from './chat-messages'
 import { ChatPanel } from './chat-panel'
@@ -69,6 +71,12 @@ export function Chat({
   })
 
   const isLoading = status === 'submitted' || status === 'streaming'
+
+  // Set session ID cookie for anonymous users
+  useEffect(() => {
+    const sessionId = getOrCreateSessionId()
+    setCookie('session-id', sessionId)
+  }, [])
 
   // Convert messages array to sections array
   const sections = useMemo<ChatSection[]>(() => {

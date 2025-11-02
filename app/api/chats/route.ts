@@ -19,10 +19,13 @@ export async function GET(request: NextRequest) {
   const offset = parseInt(searchParams.get('offset') || '0', 10)
   const limit = parseInt(searchParams.get('limit') || '20', 10)
 
-  // Get wallet address from cookies
+  // Get wallet address and session ID from cookies
   const cookieStore = await cookies()
   const walletAddress = cookieStore.get('wallet-address')?.value
-  const userId = walletAddress || 'anonymous'
+  const sessionId = cookieStore.get('session-id')?.value
+  
+  // Priority: wallet > session > temporary fallback
+  const userId = walletAddress || sessionId || `temp-${Date.now()}`
 
   try {
     const result = await getChatsPage(userId, limit, offset)

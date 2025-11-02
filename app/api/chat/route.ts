@@ -22,10 +22,13 @@ export async function POST(req: Request) {
     const referer = req.headers.get('referer')
     const isSharePage = referer?.includes('/share/')
     
-    // Get wallet address from cookies (set by client)
+    // Get wallet address and session ID from cookies (set by client)
     const cookieStore = await cookies()
     const walletAddress = cookieStore.get('wallet-address')?.value
-    const userId = walletAddress || 'anonymous'
+    const sessionId = cookieStore.get('session-id')?.value
+    
+    // Priority: wallet > session > temporary fallback
+    const userId = walletAddress || sessionId || `temp-${Date.now()}`
 
     if (isSharePage) {
       return new Response('Chat API is not available on share pages', {

@@ -102,6 +102,14 @@ export class RedisWrapper {
     }
   }
 
+  async expire(key: string, seconds: number): Promise<number | boolean> {
+    if (this.client instanceof Redis) {
+      return this.client.expire(key, seconds)
+    } else {
+      return (this.client as RedisClientType).expire(key, seconds)
+    }
+  }
+
   async close(): Promise<void> {
     if (this.client instanceof Redis) {
       // Upstash Redis doesn't require explicit closing

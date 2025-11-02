@@ -20,10 +20,13 @@ export async function DELETE(
     return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 })
   }
 
-  // Get wallet address from cookies
+  // Get wallet address and session ID from cookies
   const cookieStore = await cookies()
   const walletAddress = cookieStore.get('wallet-address')?.value
-  const userId = walletAddress || 'anonymous'
+  const sessionId = cookieStore.get('session-id')?.value
+  
+  // Priority: wallet > session > temporary fallback
+  const userId = walletAddress || sessionId || `temp-${Date.now()}`
 
   try {
     const result = await deleteChat(chatId, userId)

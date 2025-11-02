@@ -18,7 +18,7 @@ async function getRedis(): Promise<RedisWrapper | null> {
   }
   
   try {
-    return await getRedisClient()
+  return await getRedisClient()
   } catch (error) {
     console.error('Redis connection failed:', error)
     return null
@@ -241,19 +241,36 @@ export async function saveChat(chat: Chat, userId: string = 'anonymous') {
       // Redis not configured, skip saving (chat still works, just not persisted)
       return []
     }
-    const pipeline = redis.pipeline()
-
+    
+    const chatKey = `chat:${chat.id}`
+    const userKey = getUserChatKey(userId)
+    
     const chatToSave = {
       ...chat,
       messages: JSON.stringify(chat.messages)
     }
 
-    pipeline.hmset(`chat:${chat.id}`, chatToSave)
-    pipeline.zadd(getUserChatKey(userId), Date.now(), `chat:${chat.id}`)
-
-    const results = await pipeline.exec()
-
-    return results
+    // Check if this is a session-based user (anonymous)
+    const isSessionUser = userId.startsWith('session-')
+    
+    if (isSessionUser) {
+      // For session users, set 1-hour expiration
+      await redis.hmset(chatKey, chatToSave)
+      await redis.zadd(userKey, Date.now(), chatKey)
+      
+      // Set expiration (3600 seconds = 1 hour)
+      await redis.expire(chatKey, 3600)
+      await redis.expire(userKey, 3600)
+      
+      return []
+    } else {
+      // For wallet users, no expiration (permanent)
+      const pipeline = redis.pipeline()
+      pipeline.hmset(chatKey, chatToSave)
+      pipeline.zadd(userKey, Date.now(), chatKey)
+      const results = await pipeline.exec()
+      return results
+    }
   } catch (error) {
     console.error('Error saving chat:', error)
     return []
