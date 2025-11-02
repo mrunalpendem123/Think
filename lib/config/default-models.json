@@ -1,16 +1,8 @@
 {
   "models": [
     {
-      "id": "qwen3-235b",
-      "name": "Think AI Pro",
-      "provider": "Think AI",
-      "providerId": "venice",
-      "enabled": true,
-      "toolCallType": "manual"
-    },
-    {
-      "id": "llama-3.3-70b",
-      "name": "Think AI Standard",
+      "id": "qwen3-4b",
+      "name": "(2-3 seconds) Think AI Lite",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
@@ -18,15 +10,15 @@
     },
     {
       "id": "mistral-31-24b",
-      "name": "Think AI Fast",
+      "name": "(3-4 seconds) Think AI Fast",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
       "toolCallType": "manual"
     },
     {
-      "id": "qwen3-4b",
-      "name": "Think AI Lite",
+      "id": "llama-3.3-70b",
+      "name": "(4-5 seconds) Think AI Standard",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
@@ -34,7 +26,15 @@
     },
     {
       "id": "venice-uncensored",
-      "name": "Think AI Unrestricted",
+      "name": "(4-5 seconds) Think AI Unrestricted",
+      "provider": "Think AI",
+      "providerId": "venice",
+      "enabled": true,
+      "toolCallType": "manual"
+    },
+    {
+      "id": "qwen3-235b",
+      "name": "(8-10 seconds) Think AI Pro",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
