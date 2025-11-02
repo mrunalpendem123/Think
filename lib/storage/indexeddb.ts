@@ -4,7 +4,8 @@
  */
 
 import { type Chat } from '@/lib/types'
-import { encrypt, decrypt } from './encryption'
+
+import { decrypt, encrypt } from './encryption'
 
 const DB_NAME = 'private-search-ai'
 const DB_VERSION = 1

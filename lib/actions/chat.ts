@@ -3,8 +3,8 @@
  * All chat data is stored locally in the browser with encryption
  */
 
-import { type Chat } from '@/lib/types'
 import * as storage from '@/lib/storage/indexeddb'
+import { type Chat } from '@/lib/types'
 
 /**
  * Gets all chats for a user with pagination

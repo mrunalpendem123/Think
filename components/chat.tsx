@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useChat } from '@ai-sdk/react'
 import { ChatRequestOptions } from 'ai'
@@ -39,13 +39,13 @@ export function Chat({
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [isAtBottom, setIsAtBottom] = useState(true)
 
-  // Get current user ID
-  const getUserId = () => {
+  // Get current user ID - memoized to avoid unnecessary re-renders
+  const getUserId = useCallback(() => {
     if (isConnected && address) {
       return address
     }
     return getOrCreateSessionId()
-  }
+  }, [isConnected, address])
 
   const {
     messages,
@@ -110,7 +110,7 @@ export function Chat({
         console.error('Failed to save chat to IndexedDB:', error)
       })
     }
-  }, [messages, isLoading, id, isConnected, address])
+  }, [messages, isLoading, id, isConnected, address, getUserId])
 
   // Convert messages array to sections array
   const sections = useMemo<ChatSection[]>(() => {
