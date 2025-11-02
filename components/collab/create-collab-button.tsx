@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation'
 
 import { Users } from 'lucide-react'
 
-import { generateCollabChatId } from '@/lib/p2p/chat-manager'
+import { generateCollabChatId } from '@/lib/p2p/utils'
 
 import { Button } from '@/components/ui/button'
 

@@ -171,10 +171,4 @@ export class ChatManager {
   }
 }
 
-/**
- * Generate a shareable chat ID
- */
-export function generateCollabChatId(): string {
-  return `collab-${crypto.randomUUID()}`
-}
 
