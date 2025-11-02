@@ -1,9 +1,8 @@
 /**
- * Weather data parser from search results
- * Extracts weather information from Parallel AI search content
+ * Weather fetcher using Open-Meteo API
+ * Free, no API key required, privacy-friendly
+ * Docs: https://open-meteo.com/en/docs
  */
-
-import { SearchResults } from '@/lib/types'
 
 export interface WeatherData {
   location: string
@@ -50,131 +49,131 @@ export function isWeatherQuery(query: string): boolean {
 /**
  * Extracts location from weather query
  */
-function extractLocation(query: string): string {
+export function extractLocation(query: string): string {
   // Remove weather keywords to get location
   const cleanQuery = query
     .toLowerCase()
-    .replace(/weather|temperature|temp|forecast|in|for|at|the/gi, '')
+    .replace(/what|is|it|the|weather|temperature|temp|forecast|in|for|at|raining|sunny|cloudy/gi, '')
     .trim()
   
   // Capitalize first letter of each word
   return cleanQuery
     .split(' ')
+    .filter(word => word.length > 0)
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ') || 'Unknown Location'
 }
 
 /**
- * Parses temperature from text
+ * Weather condition codes from Open-Meteo
  */
-function parseTemperature(text: string): { temp: number; unit: 'C' | 'F' } | null {
-  // Match patterns like: "72°F", "22°C", "Temperature: 15°", "15 degrees"
-  const patterns = [
-    /(\d+)°?\s*([CF])/i,
-    /(\d+)\s*degrees?\s*([CF])/i,
-    /temperature:?\s*(\d+)°?/i,
-    /(\d+)°/
-  ]
-  
-  for (const pattern of patterns) {
-    const match = text.match(pattern)
-    if (match) {
-      const temp = parseInt(match[1])
-      const unit = match[2]?.toUpperCase() as 'C' | 'F' || 'F'
-      return { temp, unit }
-    }
+function getWeatherCondition(code: number): string {
+  const conditions: { [key: number]: string } = {
+    0: 'Clear',
+    1: 'Mainly Clear',
+    2: 'Partly Cloudy',
+    3: 'Overcast',
+    45: 'Foggy',
+    48: 'Foggy',
+    51: 'Light Drizzle',
+    53: 'Drizzle',
+    55: 'Heavy Drizzle',
+    61: 'Light Rain',
+    63: 'Rain',
+    65: 'Heavy Rain',
+    71: 'Light Snow',
+    73: 'Snow',
+    75: 'Heavy Snow',
+    80: 'Light Showers',
+    81: 'Showers',
+    82: 'Heavy Showers',
+    95: 'Thunderstorm',
+    96: 'Thunderstorm with Hail'
   }
-  
-  return null
+  return conditions[code] || 'Clear'
 }
 
 /**
- * Parses high/low temperatures
+ * Geocode location to get coordinates
  */
-function parseHighLow(text: string): { high?: number; low?: number } {
-  const result: { high?: number; low?: number } = {}
-  
-  // Match "High: 75° Low: 60°" or "H: 25° L: 11°"
-  const highMatch = text.match(/(?:high|h):\s*(\d+)°?/i)
-  const lowMatch = text.match(/(?:low|l):\s*(\d+)°?/i)
-  
-  if (highMatch) result.high = parseInt(highMatch[1])
-  if (lowMatch) result.low = parseInt(lowMatch[1])
-  
-  return result
-}
-
-/**
- * Parses weather condition
- */
-function parseCondition(text: string): string {
-  const conditions = ['sunny', 'clear', 'cloudy', 'partly cloudy', 'overcast', 
-                     'rainy', 'rain', 'showers', 'thunderstorm', 'snow', 'fog', 'windy']
-  
-  const lowerText = text.toLowerCase()
-  for (const condition of conditions) {
-    if (lowerText.includes(condition)) {
-      return condition.charAt(0).toUpperCase() + condition.slice(1)
+async function geocodeLocation(location: string): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const response = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=en&format=json`
+    )
+    const data = await response.json()
+    
+    if (data.results && data.results.length > 0) {
+      return {
+        lat: data.results[0].latitude,
+        lon: data.results[0].longitude
+      }
     }
-  }
-  
-  return 'Clear'
-}
-
-/**
- * Parses sunrise/sunset times
- */
-function parseSunTimes(text: string): { sunrise?: string; sunset?: string } {
-  const result: { sunrise?: string; sunset?: string } = {}
-  
-  const sunriseMatch = text.match(/sunrise:?\s*([\d:]+\s*[AP]M)/i)
-  const sunsetMatch = text.match(/sunset:?\s*([\d:]+\s*[AP]M)/i)
-  
-  if (sunriseMatch) result.sunrise = sunriseMatch[1]
-  if (sunsetMatch) result.sunset = sunsetMatch[1]
-  
-  return result
-}
-
-/**
- * Main function to parse weather from search results
- */
-export function parseWeatherFromSearch(
-  searchResults: SearchResults,
-  query: string
-): WeatherData | null {
-  if (!searchResults || !searchResults.results || searchResults.results.length === 0) {
+    return null
+  } catch (error) {
+    console.error('Geocoding error:', error)
     return null
   }
-  
-  // Combine all search result content
-  const allContent = searchResults.results
-    .map(r => `${r.title} ${r.content}`)
-    .join(' ')
-  
-  // Parse temperature
-  const tempData = parseTemperature(allContent)
-  if (!tempData) {
-    return null // No temperature found, probably not weather data
-  }
-  
-  // Parse other data
-  const highLow = parseHighLow(allContent)
-  const condition = parseCondition(allContent)
-  const sunTimes = parseSunTimes(allContent)
-  const location = extractLocation(query)
-  
-  return {
-    location,
-    current: {
-      temp: tempData.temp,
-      tempUnit: tempData.unit,
-      condition,
-      high: highLow.high,
-      low: highLow.low
-    },
-    sunrise: sunTimes.sunrise,
-    sunset: sunTimes.sunset
+}
+
+/**
+ * Fetch weather from Open-Meteo API
+ */
+export async function fetchWeather(location: string): Promise<WeatherData | null> {
+  try {
+    // First, geocode the location
+    const coords = await geocodeLocation(location)
+    if (!coords) {
+      console.error('Could not geocode location:', location)
+      return null
+    }
+
+    // Fetch weather data
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,sunrise,sunset&temperature_unit=fahrenheit&timezone=auto&forecast_days=1`
+    
+    const response = await fetch(url)
+    const data = await response.json()
+
+    if (!data.current) {
+      return null
+    }
+
+    // Parse hourly forecast (next 6 hours)
+    const now = new Date()
+    const hourly = data.hourly.time.slice(0, 6).map((time: string, i: number) => ({
+      time: new Date(time).toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        hour12: true 
+      }).replace(' ', ''),
+      temp: Math.round(data.hourly.temperature_2m[i]),
+      condition: getWeatherCondition(data.hourly.weather_code[i])
+    }))
+
+    // Format sunrise/sunset times
+    const formatTime = (dateStr: string) => {
+      return new Date(dateStr).toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      }).toLowerCase()
+    }
+
+    return {
+      location: location.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+      current: {
+        temp: Math.round(data.current.temperature_2m),
+        tempUnit: 'F',
+        condition: getWeatherCondition(data.current.weather_code),
+        high: Math.round(data.daily.temperature_2m_max[0]),
+        low: Math.round(data.daily.temperature_2m_min[0])
+      },
+      hourly,
+      sunrise: formatTime(data.daily.sunrise[0]),
+      sunset: formatTime(data.daily.sunset[0])
+    }
+  } catch (error) {
+    console.error('Weather fetch error:', error)
+    return null
   }
 }
 
