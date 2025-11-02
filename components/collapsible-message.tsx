@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown, User2 } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -9,7 +9,6 @@ import {
 } from './ui/collapsible'
 import { IconLogo } from './ui/icons'
 import { Separator } from './ui/separator'
-import { CurrentUserAvatar } from './current-user-avatar'
 
 interface CollapsibleMessageProps {
   children: React.ReactNode
@@ -42,7 +41,9 @@ export function CollapsibleMessage({
             {role === 'assistant' ? (
               <IconLogo className="size-5" />
             ) : (
-              <CurrentUserAvatar />
+              <div className="flex items-center justify-center size-5 rounded-full bg-muted">
+                <User2 size={14} className="text-muted-foreground" />
+              </div>
             )}
           </div>
         </div>
