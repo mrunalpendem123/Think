@@ -4,7 +4,7 @@
 
 A privacy-focused AI search engine that puts **your data security first**. In an age where every query is logged, analyzed, and monetized by Big Tech, this project represents a sincere effort to prove that powerful AI search can exist without sacrificing your privacy.
 
-**Powered by:** Venice AI (Private LLM) + Parallel AI (Privacy-First Search)
+**Powered by:** Venice AI (Private LLM) 
 
 ---
 
