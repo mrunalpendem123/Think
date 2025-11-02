@@ -2,7 +2,7 @@
   "models": [
     {
       "id": "qwen3-4b",
-      "name": "(2-3 seconds) Think AI Lite",
+      "name": "(2-3s) Think AI Lite",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
@@ -10,7 +10,7 @@
     },
     {
       "id": "mistral-31-24b",
-      "name": "(3-4 seconds) Think AI Fast",
+      "name": "(3-4s) Think AI Fast",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
@@ -18,7 +18,7 @@
     },
     {
       "id": "llama-3.3-70b",
-      "name": "(4-5 seconds) Think AI Standard",
+      "name": "(4-5s) Think AI Standard",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
@@ -26,7 +26,7 @@
     },
     {
       "id": "venice-uncensored",
-      "name": "(4-5 seconds) Think AI Unrestricted",
+      "name": "(4-5s) Think AI Unrestricted",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
@@ -34,7 +34,7 @@
     },
     {
       "id": "qwen3-235b",
-      "name": "(8-10 seconds) Think AI Pro",
+      "name": "(8-10s) Think AI Pro",
       "provider": "Think AI",
       "providerId": "venice",
       "enabled": true,
