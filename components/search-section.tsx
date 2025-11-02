@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react'
 import { ToolInvocation } from 'ai'
 
 import type { SearchResults as TypeSearchResults } from '@/lib/types'
+import { isWeatherQuery, parseWeatherFromSearch } from '@/lib/utils/weather-parser'
 
 import { useArtifact } from '@/components/artifact/artifact-context'
 
@@ -12,6 +13,7 @@ import { SearchSkeleton } from './default-skeleton'
 import { SearchResults } from './search-results'
 import { SearchResultsImageSection } from './search-results-image'
 import { Section, ToolArgsSection } from './section'
+import { WeatherCard } from './weather-card'
 
 interface SearchSectionProps {
   tool: ToolInvocation
@@ -40,6 +42,12 @@ export function SearchSection({
     ? ` [${includeDomains.join(', ')}]`
     : ''
 
+  // Parse weather data if this is a weather query
+  const weatherData = 
+    query && searchResults && isWeatherQuery(query)
+      ? parseWeatherFromSearch(searchResults, query)
+      : null
+
   const { open } = useArtifact()
   const header = (
     <button
@@ -64,6 +72,9 @@ export function SearchSection({
       onOpenChange={onOpenChange}
       showIcon={false}
     >
+      {/* Weather Card - Show if weather query detected */}
+      {weatherData && <WeatherCard data={weatherData} />}
+
       {searchResults &&
         searchResults.images &&
         searchResults.images.length > 0 && (
