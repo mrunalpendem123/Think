@@ -4,20 +4,20 @@ import { Button } from '@/components/ui/button'
 
 const exampleMessages = [
   {
-    heading: 'What is DeepSeek R1?',
-    message: 'What is DeepSeek R1?'
+    heading: 'Latest AI developments in 2025',
+    message: 'What are the latest AI developments in 2025?'
   },
   {
-    heading: 'Why is Nvidia growing rapidly?',
-    message: 'Why is Nvidia growing rapidly?'
+    heading: 'How does blockchain ensure privacy?',
+    message: 'How does blockchain technology ensure user privacy?'
   },
   {
-    heading: 'Tesla vs Rivian',
-    message: 'Tesla vs Rivian'
+    heading: 'Best privacy-focused browsers',
+    message: 'What are the best privacy-focused web browsers available today?'
   },
   {
-    heading: 'Summary: https://arxiv.org/pdf/2501.05707',
-    message: 'Summary: https://arxiv.org/pdf/2501.05707'
+    heading: 'Web3 wallet security tips',
+    message: 'What are the best security practices for Web3 wallets?'
   }
 ]
 export function EmptyScreen({
