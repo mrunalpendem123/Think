@@ -7,7 +7,6 @@
 import { useState } from 'react'
 
 import { useRouter } from 'next/navigation'
-
 import { UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 
