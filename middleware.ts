@@ -1,7 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
 
-import { updateSession } from '@/lib/supabase/middleware'
-
 export async function middleware(request: NextRequest) {
   // Get the protocol from X-Forwarded-Proto header or request protocol
   const protocol =
@@ -15,21 +13,9 @@ export async function middleware(request: NextRequest) {
   const baseUrl = `${protocol}${protocol.endsWith(':') ? '//' : '://'}${host}`
 
   // Create a response
-  let response: NextResponse
-
-  // Handle Supabase session if configured
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  // Only use Supabase if both URL and key are properly configured (not empty strings)
-  if (supabaseUrl && supabaseUrl.trim() !== '' && supabaseAnonKey && supabaseAnonKey.trim() !== '') {
-    response = await updateSession(request)
-  } else {
-    // If Supabase is not configured, just pass the request through
-    response = NextResponse.next({
-      request
-    })
-  }
+  const response = NextResponse.next({
+    request
+  })
 
   // Add request information to response headers
   response.headers.set('x-url', request.url)
