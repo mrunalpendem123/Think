@@ -115,6 +115,9 @@ export function Chat({
         userId
       ).then(() => {
         console.log('✅ Chat: Save successful!')
+        // Dispatch event to refresh sidebar
+        window.dispatchEvent(new Event('chat-history-updated'))
+        console.log('📡 Chat: Dispatched chat-history-updated event')
       }).catch(error => {
         console.error('❌ Chat: Failed to save to IndexedDB:', error)
       })

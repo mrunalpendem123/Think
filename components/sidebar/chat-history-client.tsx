@@ -60,11 +60,13 @@ export function ChatHistoryClient() {
 
   useEffect(() => {
     const handleHistoryUpdate = () => {
+      console.log('🔔 History: Received update event, reloading...')
       startTransition(() => {
         fetchInitialChats()
       })
     }
     window.addEventListener('chat-history-updated', handleHistoryUpdate)
+    console.log('👂 History: Listening for chat-history-updated events')
     return () => {
       window.removeEventListener('chat-history-updated', handleHistoryUpdate)
     }
