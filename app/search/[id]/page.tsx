@@ -1,6 +1,4 @@
-import { getModels } from '@/lib/config/models'
-
-import { Chat } from '@/components/chat'
+import ChatWindow from '@/components/ChatWindow'
 
 export const maxDuration = 60
 
@@ -20,8 +18,5 @@ export default async function SearchPage(props: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await props.params
-  const models = await getModels()
-  
-  // Chat component will load messages from IndexedDB client-side
-  return <Chat key={id} id={id} savedMessages={[]} models={models} />
+  return <ChatWindow chatId={id} />
 }
