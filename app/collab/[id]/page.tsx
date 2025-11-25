@@ -17,6 +17,6 @@ export default async function CollabChatPage(props: {
 }) {
   const { id } = await props.params
   
-  return <ChatWindow chatId={id} />
+  return <ChatWindow />
 }
 

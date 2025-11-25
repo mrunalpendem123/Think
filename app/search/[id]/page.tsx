@@ -18,5 +18,5 @@ export default async function SearchPage(props: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await props.params
-  return <ChatWindow chatId={id} />
+  return <ChatWindow />
 }

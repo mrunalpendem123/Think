@@ -10,5 +10,5 @@ export default async function SearchPage(props: {
   if (!q) {
     redirect('/')
   }
-  return <ChatWindow query={q} />
+  return <ChatWindow />
 }
