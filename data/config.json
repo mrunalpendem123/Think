@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "setupComplete": true,
+  "preferences": {},
+  "personalization": {},
+  "modelProviders": [
+    {
+      "id": "5fb90dc0-0244-464b-b6b4-8e94fb8f4f97",
+      "name": "Think AI",
+      "type": "venice",
+      "chatModels": [
+        {
+          "name": "(4-5s) Think AI Standard",
+          "key": "llama-3.3-70b"
+        },
+        {
+          "name": "(8-10s) Think AI Pro",
+          "key": "qwen3-235b"
+        },
+        {
+          "name": "(3-4s) Think AI Fast",
+          "key": "mistral-31-24b"
+        },
+        {
+          "name": "(2-3s) Think AI Lite",
+          "key": "qwen3-4b"
+        }
+      ],
+      "embeddingModels": [
+        {
+          "name": "Think AI - Text Embedding 3 Small",
+          "key": "text-embedding-3-small"
+        },
+        {
+          "name": "Think AI - Text Embedding 3 Large",
+          "key": "text-embedding-3-large"
+        }
+      ],
+      "config": {
+        "apiKey": "5veQ8IP7eF-x9xvpn-XK0vQPvRC3L8QoyDW-q8o1pX",
+        "baseURL": "https://api.venice.ai/api/v1"
+      },
+      "hash": "2bc9c49a232427506f2a0edb54e72c6a0a0380e4a55043aa64e3b1d89a5d4857"
+    },
+    {
+      "id": "56b5f36b-0d80-48aa-8d8a-e968cca49c5d",
+      "name": "Transformers",
+      "type": "transformers",
+      "chatModels": [],
+      "embeddingModels": [],
+      "config": {},
+      "hash": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    }
+  ],
+  "search": {
+    "searxngURL": "https://search.rhscz.eu",
+    "parallelAPIKey": "sawKl_nOFldN78HAQHFwxixaj90aySp4PTa6trRx",
+    "searxngFallbackURL": "https://priv.au",
+    "searxngFallbackURLs": [
+      "https://o5.gg",
+      "https://search.oh64.moe",
+      "https://search.inetol.net"
+    ],
+    "newsAPIKey": "08e98de70b9845e4a550c9c3cd994548",
+    "brightDataAPIKey": "73d41f675209d3851c8e7cbd92c3d8fa17dfbe7acfa6ad4536cf35edad8ef474"
+  }
+}
