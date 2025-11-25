@@ -6,9 +6,11 @@ import { Section } from '@/lib/hooks/useChat';
 const Copy = ({
   section,
   initialMessage,
+  text,
 }: {
-  section: Section;
-  initialMessage: string;
+  section?: Section;
+  initialMessage?: string;
+  text?: string;
 }) => {
   const [copied, setCopied] = useState(false);
 
