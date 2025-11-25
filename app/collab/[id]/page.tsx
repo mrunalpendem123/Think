@@ -1,6 +1,6 @@
 import { getModels } from '@/lib/config/models'
 
-import { CollaborativeChat } from '@/components/collab/collaborative-chat'
+import { CollaborativeChat } from '../../../components/collab/collaborative-chat'
 
 export const maxDuration = 60
 

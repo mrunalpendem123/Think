@@ -10,7 +10,7 @@ import {
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-import { type Model } from '@/lib/types/models'
+import { type Model } from '../types/models'
 
 import { ExtendedCoreMessage } from '../types'
 export function cn(...inputs: ClassValue[]) {

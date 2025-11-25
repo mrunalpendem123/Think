@@ -3,16 +3,16 @@ import { Inter as FontSans } from 'next/font/google'
 
 import { Analytics } from '@vercel/analytics/next'
 
-import { cn } from '@/lib/utils'
+import { cn } from '../lib/utils/index'
 
-import { SidebarProvider } from '@/components/ui/sidebar'
-import { Toaster } from '@/components/ui/sonner'
+import { SidebarProvider } from '../components/ui/sidebar'
+import { Toaster } from '../components/ui/sonner'
 
-import AppSidebar from '@/components/app-sidebar'
-import ArtifactRoot from '@/components/artifact/artifact-root'
-import Header from '@/components/header'
-import { Web3Provider } from '@/components/providers/web3-provider'
-import { ThemeProvider } from '@/components/theme-provider'
+import AppSidebar from '../components/app-sidebar'
+import ArtifactRoot from '../components/artifact/artifact-root'
+import Header from '../components/header'
+import { Web3Provider } from '../components/providers/web3-provider'
+import { ThemeProvider } from '../components/theme-provider'
 
 import './globals.css'
 
