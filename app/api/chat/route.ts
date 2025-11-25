@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers'
 
-import { createManualToolStreamResponse } from '@/lib/streaming/create-manual-tool-stream'
-import { createToolCallingStreamResponse } from '@/lib/streaming/create-tool-calling-stream'
-import { Model } from '@/lib/types/models'
-import { isProviderEnabled } from '@/lib/utils/registry'
+import { createManualToolStreamResponse } from '../../../lib/streaming/create-manual-tool-stream'
+import { createToolCallingStreamResponse } from '../../../lib/streaming/create-tool-calling-stream'
+import { Model } from '../../../lib/types/models'
+import { isProviderEnabled } from '../../../lib/utils/registry'
 
 export const maxDuration = 30
 
