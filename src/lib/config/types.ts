@@ -43,12 +43,18 @@ type SwitchUIConfigField = BaseUIConfigField & {
   default?: boolean;
 };
 
+type ArrayUIConfigField = BaseUIConfigField & {
+  type: 'array';
+  default?: any[];
+};
+
 type UIConfigField =
   | StringUIConfigField
   | SelectUIConfigField
   | PasswordUIConfigField
   | TextareaUIConfigField
-  | SwitchUIConfigField;
+  | SwitchUIConfigField
+  | ArrayUIConfigField;
 
 type ConfigModelProvider = {
   id: string;
@@ -107,4 +113,5 @@ export type {
   ConfigModelProvider,
   TextareaUIConfigField,
   SwitchUIConfigField,
+  ArrayUIConfigField,
 };
