@@ -209,11 +209,46 @@ const loadMessages = async (
       return;
     }
 
-    const messages = await getMessages(chatId);
+    const dbMessages = await getMessages(chatId);
+    
+    // Convert IndexedDB Message format to ChatWindow Message format
+    const convertedMessages: Message[] = dbMessages.map((dbMsg) => {
+      const base = {
+        chatId: dbMsg.chatId,
+        messageId: dbMsg.messageId,
+        createdAt: new Date(dbMsg.createdAt),
+      };
+      
+      if (dbMsg.role === 'user') {
+        return {
+          ...base,
+          role: 'user' as const,
+          content: dbMsg.content || '',
+        } as UserMessage;
+      } else if (dbMsg.role === 'assistant') {
+        return {
+          ...base,
+          role: 'assistant' as const,
+          content: dbMsg.content || '',
+        } as AssistantMessage;
+      } else if (dbMsg.role === 'source') {
+        return {
+          ...base,
+          role: 'source' as const,
+          sources: dbMsg.sources || [],
+        } as SourceMessage;
+      }
+      // Fallback - shouldn't happen
+      return {
+        ...base,
+        role: 'assistant' as const,
+        content: dbMsg.content || '',
+      } as AssistantMessage;
+    });
 
-    setMessages(messages as Message[]);
+    setMessages(convertedMessages);
 
-    const chatTurns = messages.filter(
+    const chatTurns = convertedMessages.filter(
       (msg): msg is ChatTurn => msg.role === 'user' || msg.role === 'assistant',
     );
 

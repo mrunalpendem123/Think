@@ -1,0 +1,31 @@
+
+> perplexica-frontend@1.11.2 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/mrunalpendem/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/mrunalpendem/Desktop/think/package-lock.json
+
+   ▲ Next.js 15.5.6
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 8.2s
+   Linting and checking validity of types ...
+ ⨯ ESLint: Invalid Options: - Unknown options: useEslintrc, extensions - 'extensions' has been removed.
+Failed to compile.
+
+./src/components/templates/ImageGalleryTemplate.tsx:36:9
+Type error: Type '{ images: { img_src: string; url: string; title: string; }[]; query: string; }' is not assignable to type 'IntrinsicAttributes & { query: string; chatHistory: Message[]; messageId: string; }'.
+  Property 'images' does not exist on type 'IntrinsicAttributes & { query: string; chatHistory: Message[]; messageId: string; }'.
+
+[0m [90m 34 |[39m       )}
+ [90m 35 |[39m       [33m<[39m[33mSearchImages[39m
+[31m[1m>[22m[39m[90m 36 |[39m         images[33m=[39m{formattedImages}
+ [90m    |[39m         [31m[1m^[22m[39m
+ [90m 37 |[39m         query[33m=[39m{query [33m||[39m [32m''[39m}
+ [90m 38 |[39m       [33m/[39m[33m>[39m
+ [90m 39 |[39m     [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m[0m
+Next.js build worker exited with code: 1 and signal: null

@@ -45,6 +45,7 @@ type SwitchUIConfigField = BaseUIConfigField & {
 
 type ArrayUIConfigField = BaseUIConfigField & {
   type: 'array';
+  placeholder?: string;
   default?: any[];
 };
 

@@ -1,4 +1,5 @@
-import { Message, Section } from '@/lib/hooks/useChat';
+import { Section } from '@/lib/hooks/useChat';
+import { Message } from '@/components/ChatWindow';
 import {
   AssistantMessage,
   UserMessage,

@@ -10,12 +10,14 @@ interface Chat {
 
 interface Message {
   id?: number;
-  role: 'assistant' | 'user' | 'source';
+  role: 'assistant' | 'user' | 'source' | 'template';
   chatId: string;
   createdAt: string;
   messageId: string;
   content?: string | null;
   sources?: any[] | null;
+  template?: string | null;
+  data?: any | null;
 }
 
 const DB_NAME = 'perplexica-db';

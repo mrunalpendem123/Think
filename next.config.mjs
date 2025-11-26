@@ -8,7 +8,7 @@ const nextConfig = {
       },
     ],
   },
-  serverExternalPackages: ['pdf-parse'],
+  serverExternalPackages: ['pdf-parse', 'ai', '@ai-sdk/openai'],
 };
 
 export default nextConfig;
