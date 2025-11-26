@@ -226,11 +226,12 @@ const MessageSection: React.FC<MessageSectionProps> = ({
                             )}
                           </button>
                         )}
-                        <Like />
+                        <Like messageId={section.userMessage?.messageId || ''} chatId={section.userMessage?.chatId || ''} />
                         <Rewrite
-                          rewrite={() => rewrite(section.userMessage.messageId)}
+                          rewrite={() => rewrite(section.userMessage?.messageId || '')}
+                          messageId={section.userMessage?.messageId || ''}
                         />
-                        <Reply setReplyingTo={() => setReplyingTo(section)} />
+                        <Reply section={section} setReplyingTo={() => setReplyingTo(section)} />
                       </div>
                     )}
                   </div>
