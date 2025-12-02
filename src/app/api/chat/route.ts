@@ -664,20 +664,37 @@ const POSTHandler = async (req: Request): Promise<Response> => {
   }
 };
 
-// Export with additional error boundary
+// Export with additional error boundary - catches any unhandled errors
 export const POST = async (req: Request): Promise<Response> => {
   try {
-    return await POSTHandler(req);
+    console.log('[POST /api/chat] Request received');
+    const response = await POSTHandler(req);
+    console.log('[POST /api/chat] Response generated successfully');
+    return response;
   } catch (outerError) {
     // This catches any errors that escape the inner try-catch
-    console.error('Fatal error in POST handler:', outerError);
-    return Response.json(
-      {
-        type: 'error',
-        message: 'A fatal error occurred',
-        data: outerError instanceof Error ? outerError.message : String(outerError),
-      },
-      { status: 500 },
-    );
+    console.error('[POST /api/chat] Fatal error in POST handler:', outerError);
+    const errorMessage = outerError instanceof Error ? outerError.message : String(outerError);
+    const errorStack = outerError instanceof Error ? outerError.stack : undefined;
+    console.error('[POST /api/chat] Fatal error details:', { errorMessage, errorStack });
+    
+    try {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'A fatal error occurred',
+          data: errorMessage,
+        },
+        { status: 500 },
+      );
+    } catch (responseError) {
+      // If even creating the error response fails, log it
+      console.error('[POST /api/chat] Failed to create error response:', responseError);
+      // Return a plain text error as last resort
+      return new Response(
+        `Internal Server Error: ${errorMessage}`,
+        { status: 500, headers: { 'Content-Type': 'text/plain' } }
+      );
+    }
   }
 };
