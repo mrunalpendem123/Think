@@ -74,23 +74,51 @@ class ModelRegistry {
   }
 
   async loadChatModel(providerId: string, modelName: string) {
+    console.log('[ModelRegistry] Loading chat model:', { providerId, modelName });
+    console.log('[ModelRegistry] Active providers:', this.activeProviders.map(p => ({ id: p.id, name: p.name, type: p.type })));
+    
     const provider = this.activeProviders.find((p) => p.id === providerId);
 
-    if (!provider) throw new Error('Invalid provider id');
+    if (!provider) {
+      const availableIds = this.activeProviders.map(p => p.id);
+      console.error('[ModelRegistry] Provider not found:', { providerId, availableIds });
+      throw new Error(`Invalid provider id: ${providerId}. Available providers: ${availableIds.join(', ')}`);
+    }
 
-    const model = await provider.provider.loadChatModel(modelName);
-
-    return model;
+    console.log('[ModelRegistry] Found provider:', { id: provider.id, name: provider.name, type: provider.type });
+    
+    try {
+      const model = await provider.provider.loadChatModel(modelName);
+      console.log('[ModelRegistry] Chat model loaded successfully:', modelName);
+      return model;
+    } catch (error) {
+      console.error('[ModelRegistry] Error loading chat model:', error);
+      throw error;
+    }
   }
 
   async loadEmbeddingModel(providerId: string, modelName: string) {
+    console.log('[ModelRegistry] Loading embedding model:', { providerId, modelName });
+    console.log('[ModelRegistry] Active providers:', this.activeProviders.map(p => ({ id: p.id, name: p.name, type: p.type })));
+    
     const provider = this.activeProviders.find((p) => p.id === providerId);
 
-    if (!provider) throw new Error('Invalid provider id');
+    if (!provider) {
+      const availableIds = this.activeProviders.map(p => p.id);
+      console.error('[ModelRegistry] Provider not found:', { providerId, availableIds });
+      throw new Error(`Invalid provider id: ${providerId}. Available providers: ${availableIds.join(', ')}`);
+    }
 
-    const model = await provider.provider.loadEmbeddingModel(modelName);
-
-    return model;
+    console.log('[ModelRegistry] Found provider:', { id: provider.id, name: provider.name, type: provider.type });
+    
+    try {
+      const model = await provider.provider.loadEmbeddingModel(modelName);
+      console.log('[ModelRegistry] Embedding model loaded successfully:', modelName);
+      return model;
+    } catch (error) {
+      console.error('[ModelRegistry] Error loading embedding model:', error);
+      throw error;
+    }
   }
 
   async addProvider(
