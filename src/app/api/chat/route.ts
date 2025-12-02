@@ -422,9 +422,11 @@ export const POST = async (req: Request) => {
     const handler = searchHandlers[body.focusMode];
 
     if (!handler) {
+      console.error('Invalid focus mode:', body.focusMode);
       return Response.json(
         {
-          message: 'Invalid focus mode',
+          type: 'error',
+          message: `Invalid focus mode: ${body.focusMode}`,
         },
         { status: 400 },
       );
@@ -432,6 +434,14 @@ export const POST = async (req: Request) => {
 
     let stream: EventEmitter;
     try {
+      console.log('Calling searchAndAnswer with:', {
+        focusMode: body.focusMode,
+        messageLength: message.content.length,
+        historyLength: history.length,
+        optimizationMode: body.optimizationMode,
+        filesCount: body.files.length,
+      });
+      
       stream = await handler.searchAndAnswer(
         message.content,
         history,
@@ -441,12 +451,17 @@ export const POST = async (req: Request) => {
         body.files,
         body.systemInstructions as string,
       );
+      
+      console.log('searchAndAnswer returned successfully');
     } catch (streamError) {
       console.error('Error getting stream from handler:', streamError);
+      const errorDetails = streamError instanceof Error ? streamError.message : String(streamError);
+      const errorStack = streamError instanceof Error ? streamError.stack : undefined;
+      console.error('Stream error details:', { errorDetails, errorStack });
       return Response.json(
         {
           type: 'error',
-          data: streamError instanceof Error ? streamError.message : 'Failed to start processing',
+          data: `Failed to start processing: ${errorDetails}`,
         },
         { status: 500 },
       );
