@@ -1,4 +1,9 @@
-import { Message } from '@/components/ChatWindow';
+import { Message, UserMessage, AssistantMessage } from '@/components/ChatWindow';
+
+// Type guard to check if message has content property
+const hasContent = (msg: Message): msg is UserMessage | AssistantMessage => {
+  return (msg.role === 'user' || msg.role === 'assistant') && 'content' in msg;
+};
 
 export const getSuggestions = async (chatHistory: Message[]): Promise<string[]> => {
   try {
@@ -20,15 +25,15 @@ export const getSuggestions = async (chatHistory: Message[]): Promise<string[]> 
 
     // Filter chat history to only include user and assistant messages with content
     const validHistory = chatHistory
+      .filter(hasContent)
       .filter((msg) => 
-        (msg.role === 'user' || msg.role === 'assistant') && 
         msg.content && 
         typeof msg.content === 'string' &&
         msg.content.trim().length > 0
       )
       .map((msg) => ({
         role: msg.role as 'user' | 'assistant',
-        content: msg.content as string,
+        content: msg.content,
       }));
 
     if (validHistory.length === 0) {
