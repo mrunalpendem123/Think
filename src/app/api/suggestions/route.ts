@@ -188,11 +188,34 @@ export const POST = async (req: Request): Promise<Response> => {
       console.log(`[POST /api/suggestions] Chat model loaded successfully`);
     } catch (modelError) {
       console.error('[POST /api/suggestions] Error loading chat model:', modelError);
+      const errorDetails = modelError instanceof Error ? modelError.message : String(modelError);
+      
+      // Check if it's a provider not found error
+      if (errorDetails.includes('Invalid provider id')) {
+        // Get available provider IDs for helpful error message
+        const availableProviderIds = registry.activeProviders.map((p) => p.id);
+        
+        return Response.json(
+          {
+            type: 'error',
+            message: 'Invalid provider ID detected. Please refresh your configuration.',
+            data: `Invalid provider id: ${body.chatModel.providerId}. Available providers: ${availableProviderIds.join(', ')}. Please refresh your browser or clear localStorage to fix this issue.`,
+            availableProviders: availableProviderIds,
+            requestedProvider: body.chatModel.providerId,
+            suggestion: 'The provider configuration may have changed. Please refresh the page to update your configuration.',
+          },
+          { 
+            status: 500,
+            headers: corsHeaders,
+          },
+        );
+      }
+      
       return Response.json(
         {
           type: 'error',
           message: 'Failed to load chat model',
-          data: modelError instanceof Error ? modelError.message : String(modelError),
+          data: errorDetails,
         },
         { 
           status: 500,

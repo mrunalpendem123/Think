@@ -572,10 +572,18 @@ const POSTHandler = async (req: Request): Promise<Response> => {
       
       // Check if it's a provider not found error
       if (errorDetails.includes('Invalid provider')) {
+        // Get available provider IDs for helpful error message
+        const availableProviderIds = registry.activeProviders.map((p) => p.id);
+        const requestedProviderIds = [body.chatModel.providerId, body.embeddingModel.providerId];
+        
         return Response.json(
           {
             type: 'error',
-            data: `Model provider not found. Please ensure your AI provider is properly configured.`,
+            message: 'Invalid provider ID detected. Please refresh your configuration.',
+            data: `Invalid provider id: ${requestedProviderIds.join(', ')}. Available providers: ${availableProviderIds.join(', ')}. Please refresh your browser or clear localStorage to fix this issue.`,
+            availableProviders: availableProviderIds,
+            requestedProviders: requestedProviderIds,
+            suggestion: 'The provider configuration may have changed. Please refresh the page to update your configuration.',
           },
           { 
             status: 500,
@@ -587,6 +595,7 @@ const POSTHandler = async (req: Request): Promise<Response> => {
       return Response.json(
         {
           type: 'error',
+          message: 'Failed to load AI models',
           data: `Failed to load models: ${errorDetails}`,
         },
         { 

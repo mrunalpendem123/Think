@@ -24,6 +24,15 @@ export const metadata: Metadata = {
   title: 'Think AI - Powered by Venice',
   description:
     'Think AI is an AI powered chatbot that is connected to the internet, powered by Venice.ai',
+  icons: {
+    icon: [
+      { url: '/icon.png', sizes: '440x440', type: 'image/png' },
+      { url: '/icon-100.png', sizes: '100x100', type: 'image/png' },
+      { url: '/icon-50.png', sizes: '50x50', type: 'image/png' },
+    ],
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
 export default async function RootLayout({

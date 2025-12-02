@@ -883,6 +883,99 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       return;
     }
 
+    // Validate provider IDs against current providers list
+    let validatedChatModelProvider = chatModelProvider;
+    let validatedEmbeddingModelProvider = embeddingModelProvider;
+    let configRefreshed = false;
+
+    try {
+      const providersRes = await fetch(`/api/providers`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (providersRes.ok) {
+        const providersData = await providersRes.json();
+        const providers: MinimalProvider[] = providersData.providers;
+
+        // Validate chat model provider ID
+        const isValidChatProvider = providers.some(
+          (p) => p.id === chatModelProvider.providerId && p.chatModels.length > 0
+        );
+
+        if (!isValidChatProvider) {
+          console.warn('[sendMessage] Chat provider ID invalid, refreshing config');
+          // Refresh config
+          await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+          validatedChatModelProvider = {
+            key: localStorage.getItem('chatModelKey') || chatModelProvider.key,
+            providerId: localStorage.getItem('chatModelProviderId') || chatModelProvider.providerId,
+          };
+          configRefreshed = true;
+        } else {
+          // Validate chat model key is still valid
+          const provider = providers.find((p) => p.id === chatModelProvider.providerId);
+          if (provider) {
+            const isValidModel = provider.chatModels.some((m) => m.key === chatModelProvider.key);
+            if (!isValidModel) {
+              console.warn('[sendMessage] Chat model key invalid, refreshing config');
+              await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+              validatedChatModelProvider = {
+                key: localStorage.getItem('chatModelKey') || chatModelProvider.key,
+                providerId: localStorage.getItem('chatModelProviderId') || chatModelProvider.providerId,
+              };
+              configRefreshed = true;
+            }
+          }
+        }
+
+        // Validate embedding model provider ID
+        const isValidEmbeddingProvider = providers.some(
+          (p) => p.id === embeddingModelProvider.providerId && p.embeddingModels.length > 0
+        );
+
+        if (!isValidEmbeddingProvider) {
+          console.warn('[sendMessage] Embedding provider ID invalid, refreshing config');
+          if (!configRefreshed) {
+            await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+          }
+          validatedEmbeddingModelProvider = {
+            key: localStorage.getItem('embeddingModelKey') || embeddingModelProvider.key,
+            providerId: localStorage.getItem('embeddingModelProviderId') || embeddingModelProvider.providerId,
+          };
+          configRefreshed = true;
+        } else {
+          // Validate embedding model key is still valid
+          const provider = providers.find((p) => p.id === embeddingModelProvider.providerId);
+          if (provider) {
+            const isValidModel = provider.embeddingModels.some((m) => m.key === embeddingModelProvider.key);
+            if (!isValidModel) {
+              console.warn('[sendMessage] Embedding model key invalid, refreshing config');
+              if (!configRefreshed) {
+                await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+              }
+              validatedEmbeddingModelProvider = {
+                key: localStorage.getItem('embeddingModelKey') || embeddingModelProvider.key,
+                providerId: localStorage.getItem('embeddingModelProviderId') || embeddingModelProvider.providerId,
+              };
+              configRefreshed = true;
+            }
+          }
+        }
+
+        if (configRefreshed) {
+          // Update state with validated providers
+          setChatModelProvider(validatedChatModelProvider);
+          setEmbeddingModelProvider(validatedEmbeddingModelProvider);
+          toast.info('Configuration refreshed automatically');
+        }
+      }
+    } catch (configError) {
+      console.error('[sendMessage] Error validating provider config:', configError);
+      // Continue with original config - let API handle validation
+    }
+
     try {
       const requestBody = {
         content: messageWithContext,
@@ -899,12 +992,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           ? chatHistory.slice(0, messageIndex === -1 ? undefined : messageIndex)
           : chatHistory || [],
         chatModel: {
-          key: chatModelProvider.key,
-          providerId: chatModelProvider.providerId,
+          key: validatedChatModelProvider.key,
+          providerId: validatedChatModelProvider.providerId,
         },
         embeddingModel: {
-          key: embeddingModelProvider.key,
-          providerId: embeddingModelProvider.providerId,
+          key: validatedEmbeddingModelProvider.key,
+          providerId: validatedEmbeddingModelProvider.providerId,
         },
         systemInstructions: localStorage.getItem('systemInstructions') || '',
       };
