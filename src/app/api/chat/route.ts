@@ -652,37 +652,62 @@ const POSTHandler = async (req: Request): Promise<Response> => {
     // Note: Don't send empty message - let the stream handle first message
     // This ensures proper message ID assignment
 
-    handleEmitterEvents(stream, writer, encoder, message.chatId)
-      .then(() => {
-        clearTimeout(timeoutId);
+    // Wrap handleEmitterEvents in try-catch to catch any synchronous errors
+    try {
+      handleEmitterEvents(stream, writer, encoder, message.chatId)
+        .then(() => {
+          clearTimeout(timeoutId);
+          try {
+            writer.close();
+          } catch (closeError) {
+            console.error('Error closing writer:', closeError);
+          }
+        })
+        .catch((error) => {
+          clearTimeout(timeoutId);
+          console.error('Error in handleEmitterEvents:', error);
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'error',
+                  data: error instanceof Error ? error.message : 'An error occurred while processing your request',
+                }) + '\n',
+              ),
+            );
+            writer.close();
+          } catch (writeError) {
+            console.error('Error writing error message:', writeError);
+            try {
+              writer.close();
+            } catch (closeError) {
+              console.error('Error closing writer after error:', closeError);
+            }
+          }
+        });
+    } catch (syncError) {
+      // Catch any synchronous errors in setting up the stream handler
+      clearTimeout(timeoutId);
+      console.error('Synchronous error setting up stream handler:', syncError);
+      try {
+        writer.write(
+          encoder.encode(
+            JSON.stringify({
+              type: 'error',
+              data: syncError instanceof Error ? syncError.message : 'Failed to set up stream handler',
+            }) + '\n',
+          ),
+        );
+        writer.close();
+      } catch (writeError) {
+        console.error('Error writing sync error message:', writeError);
         try {
           writer.close();
         } catch (closeError) {
           console.error('Error closing writer:', closeError);
         }
-      })
-      .catch((error) => {
-        clearTimeout(timeoutId);
-        console.error('Error in handleEmitterEvents:', error);
-        try {
-          writer.write(
-            encoder.encode(
-              JSON.stringify({
-                type: 'error',
-                data: error instanceof Error ? error.message : 'An error occurred while processing your request',
-              }) + '\n',
-            ),
-          );
-          writer.close();
-        } catch (writeError) {
-          console.error('Error writing error message:', writeError);
-          try {
-            writer.close();
-          } catch (closeError) {
-            console.error('Error closing writer after error:', closeError);
-          }
-        }
-      });
+      }
+    }
 
     // Don't await handleHistorySave - let it run in background
     handleHistorySave(message, humanMessageId, body.focusMode, body.files).catch(
