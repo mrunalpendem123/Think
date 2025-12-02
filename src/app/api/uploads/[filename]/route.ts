@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
 import fs from 'fs';
+import { NextResponse } from 'next/server';
 import path from 'path';
 
 const uploadDir = path.join(process.cwd(), 'uploads');
 
-export async function GET(
+export const GET = async (
   req: Request,
-  { params }: { params: { filename: string } }
-) {
+  { params }: { params: Promise<{ filename: string }> }
+) => {
   try {
-    const filename = params.filename;
+    const { filename } = await params;
     const filePath = path.join(uploadDir, filename);
 
     // Security: prevent directory traversal
@@ -56,5 +56,5 @@ export async function GET(
       { status: 500 }
     );
   }
-}
+};
 

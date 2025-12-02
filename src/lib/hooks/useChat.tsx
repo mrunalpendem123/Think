@@ -6,6 +6,7 @@ import {
   Message,
   SourceMessage,
   SuggestionMessage,
+  TemplateMessage,
   UserMessage,
 } from '@/components/ChatWindow';
 import {
@@ -131,8 +132,11 @@ const checkConfig = async (
       );
     }
 
+    // Prefer Think AI (Venice) provider if available
+    const thinkAIProvider = providers.find((p) => p.name === 'Think AI' && p.chatModels.length > 0);
     const chatModelProvider =
       providers.find((p) => p.id === chatModelProviderId) ??
+      thinkAIProvider ??
       providers.find((p) => p.chatModels.length > 0);
 
     if (!chatModelProvider) {
@@ -143,13 +147,21 @@ const checkConfig = async (
 
     chatModelProviderId = chatModelProvider.id;
 
+    // Default to Think AI Fast (mistral-31-24b) if available, otherwise first model
+    const defaultModel = chatModelProvider.chatModels.find((m) => m.key === 'mistral-31-24b') 
+      ?? chatModelProvider.chatModels.find((m) => m.name.includes('Fast'))
+      ?? chatModelProvider.chatModels[0];
+    
     const chatModel =
       chatModelProvider.chatModels.find((m) => m.key === chatModelKey) ??
-      chatModelProvider.chatModels[0];
+      defaultModel;
     chatModelKey = chatModel.key;
 
+    // Prefer Think AI (Venice) provider for embeddings if available
+    const thinkAIEmbeddingProvider = providers.find((p) => p.name === 'Think AI' && p.embeddingModels.length > 0);
     const embeddingModelProvider =
       providers.find((p) => p.id === embeddingModelProviderId) ??
+      thinkAIEmbeddingProvider ??
       providers.find((p) => p.embeddingModels.length > 0);
 
     if (!embeddingModelProvider) {
@@ -160,10 +172,15 @@ const checkConfig = async (
 
     embeddingModelProviderId = embeddingModelProvider.id;
 
+    // Default to Think AI Text Embedding 3 Small if available, otherwise first model
+    const defaultEmbeddingModel = embeddingModelProvider.embeddingModels.find((m) => m.key === 'text-embedding-3-small')
+      ?? embeddingModelProvider.embeddingModels.find((m) => m.name.includes('Small'))
+      ?? embeddingModelProvider.embeddingModels[0];
+    
     const embeddingModel =
       embeddingModelProvider.embeddingModels.find(
         (m) => m.key === embeddingModelKey,
-      ) ?? embeddingModelProvider.embeddingModels[0];
+      ) ?? defaultEmbeddingModel;
     embeddingModelKey = embeddingModel.key;
 
     localStorage.setItem('chatModelKey', chatModelKey);
@@ -209,42 +226,24 @@ const loadMessages = async (
       return;
     }
 
-    const dbMessages = await getMessages(chatId);
+    const messages = await getMessages(chatId);
     
-    // Convert IndexedDB Message format to ChatWindow Message format
-    const convertedMessages: Message[] = dbMessages.map((dbMsg) => {
-      const base = {
-        chatId: dbMsg.chatId,
-        messageId: dbMsg.messageId,
-        createdAt: new Date(dbMsg.createdAt),
-      };
-      
-      if (dbMsg.role === 'user') {
-        return {
-          ...base,
-          role: 'user' as const,
-          content: dbMsg.content || '',
-        } as UserMessage;
-      } else if (dbMsg.role === 'assistant') {
-        return {
-          ...base,
-          role: 'assistant' as const,
-          content: dbMsg.content || '',
-        } as AssistantMessage;
-      } else if (dbMsg.role === 'source') {
-        return {
-          ...base,
-          role: 'source' as const,
-          sources: dbMsg.sources || [],
-        } as SourceMessage;
+    // Convert createdAt strings to Date objects, handling both string and Date types
+    const convertedMessages = messages.map((msg: any) => {
+      let createdAt: Date;
+      if (msg.createdAt instanceof Date) {
+        createdAt = msg.createdAt;
+      } else if (typeof msg.createdAt === 'string') {
+        createdAt = new Date(msg.createdAt);
+      } else {
+        createdAt = new Date();
       }
-      // Fallback - shouldn't happen
+      
       return {
-        ...base,
-        role: 'assistant' as const,
-        content: dbMsg.content || '',
-      } as AssistantMessage;
-    });
+        ...msg,
+        createdAt,
+      };
+    }) as unknown as Message[];
 
     setMessages(convertedMessages);
 
@@ -369,6 +368,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const messagesRef = useRef<Message[]>([]);
 
   const chatTurns = useMemo((): ChatTurn[] => {
+    if (!Array.isArray(messages)) {
+      return [];
+    }
     return messages.filter(
       (msg): msg is ChatTurn => msg.role === 'user' || msg.role === 'assistant',
     );
@@ -376,6 +378,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
   const sections = useMemo<Section[]>(() => {
     const sections: Section[] = [];
+
+    // Ensure messages is an array before processing
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return sections;
+    }
 
     messages.forEach((msg, i) => {
       if (msg.role === 'user') {
@@ -425,6 +432,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           if (
             sourceMessage &&
             sourceMessage.sources &&
+            Array.isArray(sourceMessage.sources) &&
             sourceMessage.sources.length > 0
           ) {
             processedMessage = processedMessage.replace(
@@ -469,7 +477,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
               (nextUserMessageIndex === -1 || j < nextUserMessageIndex),
           ) as SuggestionMessage | undefined;
 
-          if (suggestionMessage && suggestionMessage.suggestions.length > 0) {
+          if (
+            suggestionMessage &&
+            suggestionMessage.suggestions &&
+            Array.isArray(suggestionMessage.suggestions) &&
+            suggestionMessage.suggestions.length > 0
+          ) {
             suggestions = suggestionMessage.suggestions;
           }
         }
@@ -529,9 +542,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setFiles,
         setFileIds,
       );
-    } else if (!chatId) {
+    } else if (!chatId && !params.chatId) {
+      // Only create new chat if we're on home page (no chatId in URL)
       setNewChatCreated(true);
       setIsMessagesLoaded(true);
+      setMessages([]);
+      setChatHistory([]);
+      setFiles([]);
+      setFileIds([]);
       setChatId(randomHex(40));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -650,41 +668,21 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
     const messageHandler = async (data: any) => {
       if (data.type === 'error') {
-        const errorMessage = data.data || 'An error occurred while processing your request';
-        toast.error(errorMessage);
-        
-        // Add error message to messages so it shows in UI
-        const errorMessageId = randomHex(14);
-        await saveMessage({
-          messageId: errorMessageId,
-          chatId: chatId!,
-          role: 'assistant',
-          content: `Error: ${errorMessage}`,
-          createdAt: new Date().toISOString(),
-        });
-
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            messageId: errorMessageId,
-            chatId: chatId!,
-            role: 'assistant',
-            content: `Error: ${errorMessage}`,
-            createdAt: new Date(),
-          },
-        ]);
-        
+        toast.error(data.data);
         setLoading(false);
         return;
       }
 
       if (data.type === 'sources') {
+        // Ensure data.data is an array
+        const sources = Array.isArray(data.data) ? data.data : [];
+        
         // Save source message to IndexedDB
         await saveMessage({
           messageId: data.messageId,
           chatId: chatId!,
           role: 'source',
-          sources: data.data,
+          sources: sources,
           createdAt: new Date().toISOString(),
         });
 
@@ -694,11 +692,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             messageId: data.messageId,
             chatId: chatId!,
             role: 'source',
-            sources: data.data,
+            sources: sources,
             createdAt: new Date(),
           },
         ]);
-        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        if (sources.length > 0) {
           setMessageAppeared(true);
         }
       }
@@ -711,8 +709,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           role: 'template',
           template: data.template,
           data: data.data,
-          createdAt: new Date().toISOString(),
-        });
+          createdAt: new Date(),
+        } as TemplateMessage);
 
         setMessages((prevMessages) => [
           ...prevMessages,
@@ -729,12 +727,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data.type === 'message') {
+        // Ensure data.data is a string
+        const messageData = typeof data.data === 'string' ? data.data : String(data.data || '');
+        
         if (!added) {
           assistantMessageId = data.messageId;
           setMessages((prevMessages) => [
             ...prevMessages,
             {
-              content: data.data || '',
+              content: messageData,
               messageId: data.messageId,
               chatId: chatId!,
               role: 'assistant',
@@ -750,14 +751,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
                 message.messageId === data.messageId &&
                 message.role === 'assistant'
               ) {
-                return { ...message, content: (message.content || '') + (data.data || '') };
+                const currentContent = typeof message.content === 'string' ? message.content : '';
+                return { ...message, content: currentContent + messageData };
               }
 
               return message;
             }),
           );
         }
-        recievedMessage += data.data || '';
+        recievedMessage += messageData;
       }
 
       if (data.type === 'messageEnd') {
@@ -808,22 +810,32 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (
           sourceMessage &&
+          sourceMessage.sources &&
+          Array.isArray(sourceMessage.sources) &&
           sourceMessage.sources.length > 0 &&
           suggestionMessageIndex == -1
         ) {
-          const suggestions = await getSuggestions(messagesRef.current);
-          setMessages((prev) => {
-            return [
-              ...prev,
-              {
-                role: 'suggestion',
-                suggestions: suggestions,
-                chatId: chatId!,
-                createdAt: new Date(),
-                messageId: randomHex(14),
-              },
-            ];
-          });
+          try {
+            const suggestions = await getSuggestions(messagesRef.current);
+            // Only add suggestions if we got valid ones
+            if (suggestions && Array.isArray(suggestions) && suggestions.length > 0) {
+              setMessages((prev) => {
+                return [
+                  ...prev,
+                  {
+                    role: 'suggestion',
+                    suggestions: suggestions,
+                    chatId: chatId!,
+                    createdAt: new Date(),
+                    messageId: randomHex(14),
+                  },
+                ];
+              });
+            }
+          } catch (error) {
+            console.error('[useChat] Error fetching suggestions:', error);
+            // Silently fail - suggestions are optional
+          }
         }
       }
     };
@@ -849,36 +861,163 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('📤 Full message being sent to AI:', messageWithContext);
     }
 
+    // Validate model configuration before sending request
+    if (!chatModelProvider.key || !chatModelProvider.providerId) {
+      console.error('Chat model not configured:', { chatModelProvider });
+      toast.error('Chat model is not configured. Please select a model in settings.');
+      setLoading(false);
+      return;
+    }
+
+    if (!embeddingModelProvider.key || !embeddingModelProvider.providerId) {
+      console.error('Embedding model not configured:', { embeddingModelProvider });
+      toast.error('Embedding model is not configured. Please select a model in settings.');
+      setLoading(false);
+      return;
+    }
+
+    if (!chatId) {
+      console.error('Chat ID is missing');
+      toast.error('Chat ID is missing. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    // Validate provider IDs against current providers list
+    let validatedChatModelProvider = chatModelProvider;
+    let validatedEmbeddingModelProvider = embeddingModelProvider;
+    let configRefreshed = false;
+
     try {
+      const providersRes = await fetch(`/api/providers`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (providersRes.ok) {
+        const providersData = await providersRes.json();
+        const providers: MinimalProvider[] = providersData.providers;
+
+        // Validate chat model provider ID
+        const isValidChatProvider = providers.some(
+          (p) => p.id === chatModelProvider.providerId && p.chatModels.length > 0
+        );
+
+        if (!isValidChatProvider) {
+          console.warn('[sendMessage] Chat provider ID invalid, refreshing config');
+          // Refresh config
+          await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+          validatedChatModelProvider = {
+            key: localStorage.getItem('chatModelKey') || chatModelProvider.key,
+            providerId: localStorage.getItem('chatModelProviderId') || chatModelProvider.providerId,
+          };
+          configRefreshed = true;
+        } else {
+          // Validate chat model key is still valid
+          const provider = providers.find((p) => p.id === chatModelProvider.providerId);
+          if (provider) {
+            const isValidModel = provider.chatModels.some((m) => m.key === chatModelProvider.key);
+            if (!isValidModel) {
+              console.warn('[sendMessage] Chat model key invalid, refreshing config');
+              await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+              validatedChatModelProvider = {
+                key: localStorage.getItem('chatModelKey') || chatModelProvider.key,
+                providerId: localStorage.getItem('chatModelProviderId') || chatModelProvider.providerId,
+              };
+              configRefreshed = true;
+            }
+          }
+        }
+
+        // Validate embedding model provider ID
+        const isValidEmbeddingProvider = providers.some(
+          (p) => p.id === embeddingModelProvider.providerId && p.embeddingModels.length > 0
+        );
+
+        if (!isValidEmbeddingProvider) {
+          console.warn('[sendMessage] Embedding provider ID invalid, refreshing config');
+          if (!configRefreshed) {
+            await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+          }
+          validatedEmbeddingModelProvider = {
+            key: localStorage.getItem('embeddingModelKey') || embeddingModelProvider.key,
+            providerId: localStorage.getItem('embeddingModelProviderId') || embeddingModelProvider.providerId,
+          };
+          configRefreshed = true;
+        } else {
+          // Validate embedding model key is still valid
+          const provider = providers.find((p) => p.id === embeddingModelProvider.providerId);
+          if (provider) {
+            const isValidModel = provider.embeddingModels.some((m) => m.key === embeddingModelProvider.key);
+            if (!isValidModel) {
+              console.warn('[sendMessage] Embedding model key invalid, refreshing config');
+              if (!configRefreshed) {
+                await checkConfig(setChatModelProvider, setEmbeddingModelProvider, setIsConfigReady, setHasError);
+              }
+              validatedEmbeddingModelProvider = {
+                key: localStorage.getItem('embeddingModelKey') || embeddingModelProvider.key,
+                providerId: localStorage.getItem('embeddingModelProviderId') || embeddingModelProvider.providerId,
+              };
+              configRefreshed = true;
+            }
+          }
+        }
+
+        if (configRefreshed) {
+          // Update state with validated providers
+          setChatModelProvider(validatedChatModelProvider);
+          setEmbeddingModelProvider(validatedEmbeddingModelProvider);
+          toast.info('Configuration refreshed automatically');
+        }
+      }
+    } catch (configError) {
+      console.error('[sendMessage] Error validating provider config:', configError);
+      // Continue with original config - let API handle validation
+    }
+
+    try {
+      const requestBody = {
+        content: messageWithContext,
+        message: {
+          messageId: messageId,
+          chatId: chatId,
+          content: message, // Store original message without context
+        },
+        chatId: chatId,
+        files: fileIds || [],
+        focusMode: focusMode || 'webSearch',
+        optimizationMode: optimizationMode || 'speed',
+        history: rewrite
+          ? chatHistory.slice(0, messageIndex === -1 ? undefined : messageIndex)
+          : chatHistory || [],
+        chatModel: {
+          key: validatedChatModelProvider.key,
+          providerId: validatedChatModelProvider.providerId,
+        },
+        embeddingModel: {
+          key: validatedEmbeddingModelProvider.key,
+          providerId: validatedEmbeddingModelProvider.providerId,
+        },
+        systemInstructions: localStorage.getItem('systemInstructions') || '',
+      };
+
+      console.log('[sendMessage] Sending request with:', {
+        messageId,
+        chatId,
+        focusMode: requestBody.focusMode,
+        chatModel: requestBody.chatModel,
+        embeddingModel: requestBody.embeddingModel,
+        filesCount: requestBody.files.length,
+        historyLength: requestBody.history.length,
+      });
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          content: messageWithContext,
-          message: {
-            messageId: messageId,
-            chatId: chatId!,
-            content: message, // Store original message without context
-          },
-          chatId: chatId!,
-          files: fileIds,
-          focusMode: focusMode,
-          optimizationMode: optimizationMode,
-          history: rewrite
-            ? chatHistory.slice(0, messageIndex === -1 ? undefined : messageIndex)
-            : chatHistory,
-          chatModel: {
-            key: chatModelProvider.key,
-            providerId: chatModelProvider.providerId,
-          },
-          embeddingModel: {
-            key: embeddingModelProvider.key,
-            providerId: embeddingModelProvider.providerId,
-          },
-          systemInstructions: localStorage.getItem('systemInstructions'),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!res.ok) {
@@ -895,6 +1034,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const reader = res.body?.getReader();
+      if (!reader) {
+        toast.error('Failed to get response reader');
+        setLoading(false);
+        return;
+      }
+      
       const decoder = new TextDecoder('utf-8');
 
       let partialChunk = '';
@@ -919,34 +1064,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error: any) {
       console.error('Error sending message:', error);
-      const errorMessage = error.message || 'Failed to send message. Please try again.';
-      toast.error(errorMessage);
-      
-      // Add error message to UI
-      const errorMessageId = randomHex(14);
-      try {
-        await saveMessage({
-          messageId: errorMessageId,
-          chatId: chatId!,
-          role: 'assistant',
-          content: `Error: ${errorMessage}`,
-          createdAt: new Date().toISOString(),
-        });
-
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            messageId: errorMessageId,
-            chatId: chatId!,
-            role: 'assistant',
-            content: `Error: ${errorMessage}`,
-            createdAt: new Date(),
-          },
-        ]);
-      } catch (saveError) {
-        console.error('Error saving error message:', saveError);
-      }
-      
+      toast.error(error.message || 'Failed to send message. Please try again.');
       setLoading(false);
     }
   };

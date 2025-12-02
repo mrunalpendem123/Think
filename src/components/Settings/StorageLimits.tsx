@@ -172,7 +172,7 @@ export function StorageLimits() {
             <div className="flex-1">
               <p className="text-sm font-medium mb-1">Delete Chat History</p>
               <p className="text-xs text-black/60 dark:text-white/60">
-                Think AI doesn't store (and can't access) your chat history. Instead, it is stored locally in your browser using IndexedDB, and you can delete it here.
+                Think AI doesn&apos;t store (and can&apos;t access) your chat history. Instead, it is stored locally in your browser using IndexedDB, and you can delete it here.
               </p>
             </div>
             <button

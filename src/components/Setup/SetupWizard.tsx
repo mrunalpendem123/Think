@@ -48,7 +48,7 @@ const SetupWizard = ({
               >
                 Welcome to{' '}
                 <span className="text-[#24A0ED] italic font-['PP_Editorial']">
-                  Think Fast
+                  Think AI
                 </span>
               </motion.h2>
               <motion.p
@@ -93,9 +93,9 @@ const SetupWizard = ({
                 >
                   Let us get{' '}
                   <span className="text-[#24A0ED] italic font-['PP_Editorial']">
-                    Think Fast
+                    Think AI
                   </span>{' '}
-                  set up for you
+                  powered by Venice set up for you
                 </motion.p>
               )}
               {setupState > 1 && (

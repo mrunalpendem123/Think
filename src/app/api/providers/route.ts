@@ -1,6 +1,17 @@
 import ModelRegistry from '@/lib/models/registry';
 import { NextRequest } from 'next/server';
 
+export const OPTIONS = async () => {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
+};
+
 export const GET = async (req: Request) => {
   try {
     const registry = new ModelRegistry();
@@ -17,6 +28,9 @@ export const GET = async (req: Request) => {
       },
       {
         status: 200,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
       },
     );
   } catch (err) {

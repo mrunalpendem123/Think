@@ -4,7 +4,6 @@ import BaseModelProvider from './baseProvider';
 import { Embeddings } from '@langchain/core/embeddings';
 import { UIConfigField } from '@/lib/config/types';
 import { getConfiguredModelProviderById } from '@/lib/config/serverRegistry';
-import { HuggingFaceTransformersEmbeddings } from '@langchain/community/embeddings/huggingface_transformers';
 interface TransformersConfig {}
 
 const defaultEmbeddingModels: Model[] = [
@@ -63,9 +62,18 @@ class TransformersProvider extends BaseModelProvider<TransformersConfig> {
       );
     }
 
-    return new HuggingFaceTransformersEmbeddings({
-      model: key,
-    });
+    try {
+      // Dynamically import to avoid bundling @huggingface/transformers in serverless functions
+      const { HuggingFaceTransformersEmbeddings } = await import('@langchain/community/embeddings/huggingface_transformers');
+      
+      return new HuggingFaceTransformersEmbeddings({
+        model: key,
+      });
+    } catch (error) {
+      throw new Error(
+        `Transformers provider is not available. @huggingface/transformers package is required but not found. Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
   }
 
   static parseAndValidate(raw: any): TransformersConfig {

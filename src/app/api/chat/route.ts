@@ -13,6 +13,41 @@ import { ModelWithProvider } from '@/lib/models/types';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handle OPTIONS request for CORS
+export const OPTIONS = async () => {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+};
+
+// Global error handler wrapper
+const handleRouteError = (error: unknown, context: string): Response => {
+  console.error(`[${context}] Error:`, error);
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : undefined;
+  console.error(`[${context}] Error details:`, { errorMessage, errorStack });
+  
+  return Response.json(
+    {
+      type: 'error',
+      message: 'An error occurred while processing your request',
+      data: errorMessage,
+    },
+    { 
+      status: 500,
+      headers: corsHeaders,
+    },
+  );
+};
+
 const messageSchema = z.object({
   messageId: z.string().min(1, 'Message ID is required'),
   chatId: z.string().min(1, 'Chat ID is required'),
@@ -47,11 +82,10 @@ const embeddingModelSchema: z.ZodType<ModelWithProvider> = z.object({
 
 const bodySchema = z.object({
   message: messageSchema,
-  optimizationMode: z.enum(['speed', 'balanced', 'quality'], {
-    errorMap: () => ({
-      message: 'Optimization mode must be one of: speed, balanced, quality',
-    }),
-  }),
+  // Accept extra fields from client but don't require them
+  content: z.string().optional(), // Client sends this, we'll use message.content instead
+  chatId: z.string().optional(), // Client sends this, we'll use message.chatId instead
+  optimizationMode: z.enum(['speed', 'balanced', 'quality']).optional().default('speed'),
   focusMode: z.string().min(1, 'Focus mode is required'),
   history: z
     .array(
@@ -67,7 +101,7 @@ const bodySchema = z.object({
   chatModel: chatModelSchema,
   embeddingModel: embeddingModelSchema,
   systemInstructions: z.string().nullable().optional().default(''),
-});
+}).passthrough(); // Allow extra fields without validation errors
 
 type Message = z.infer<typeof messageSchema>;
 type Body = z.infer<typeof bodySchema>;
@@ -96,155 +130,171 @@ const handleEmitterEvents = async (
   writer: WritableStreamDefaultWriter,
   encoder: TextEncoder,
   chatId: string,
-) => {
-  let receivedMessage = '';
-  const aiMessageId = crypto.randomBytes(7).toString('hex');
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let receivedMessage = '';
+    const aiMessageId = crypto.randomBytes(7).toString('hex');
+    let streamEnded = false;
+    let streamErrored = false;
 
-  stream.on('data', (data) => {
-    try {
-      let parsedData;
+    stream.on('data', (data) => {
       try {
-        parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-      } catch (parseError) {
-        console.error('Error parsing stream data:', parseError, 'Data:', data);
-        return;
-      }
-
-      if (parsedData.type === 'response') {
+        let parsedData;
         try {
-          writer.write(
-            encoder.encode(
-              JSON.stringify({
-                type: 'message',
-                data: parsedData.data,
-                messageId: aiMessageId,
-              }) + '\n',
-            ),
-          );
-          receivedMessage += parsedData.data || '';
-        } catch (writeError) {
-          console.error('Error writing message:', writeError);
+          parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+        } catch (parseError) {
+          console.error('Error parsing stream data:', parseError, 'Data:', data);
+          return;
         }
-      } else if (parsedData.type === 'sources') {
-        try {
-          writer.write(
-            encoder.encode(
-              JSON.stringify({
-                type: 'sources',
-                data: parsedData.data,
-                messageId: aiMessageId,
-              }) + '\n',
-            ),
-          );
 
-          const sourceMessageId = crypto.randomBytes(7).toString('hex');
+        if (parsedData.type === 'response') {
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'message',
+                  data: parsedData.data,
+                  messageId: aiMessageId,
+                }) + '\n',
+              ),
+            );
+            receivedMessage += parsedData.data || '';
+          } catch (writeError) {
+            console.error('Error writing message:', writeError);
+          }
+        } else if (parsedData.type === 'sources') {
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'sources',
+                  data: parsedData.data,
+                  messageId: aiMessageId,
+                }) + '\n',
+              ),
+            );
 
-          db.insert(messagesSchema)
-            .values({
-              chatId: chatId,
-              messageId: sourceMessageId,
-              role: 'source',
-              sources: parsedData.data,
-              createdAt: new Date().toString(),
-            })
-            .execute()
-            .catch((dbError) => {
-              console.error('Error saving sources to DB:', dbError);
-            });
-        } catch (writeError) {
-          console.error('Error writing sources:', writeError);
-        }
-      } else if (parsedData.type === 'template') {
-        try {
-          writer.write(
-            encoder.encode(
-              JSON.stringify({
-                type: 'template',
+            const sourceMessageId = crypto.randomBytes(7).toString('hex');
+
+            db.insert(messagesSchema)
+              .values({
+                chatId: chatId,
+                messageId: sourceMessageId,
+                role: 'source',
+                sources: parsedData.data,
+                createdAt: new Date().toString(),
+              })
+              .execute()
+              .catch((dbError: any) => {
+                console.error('Error saving sources to DB:', dbError);
+              });
+          } catch (writeError) {
+            console.error('Error writing sources:', writeError);
+          }
+        } else if (parsedData.type === 'template') {
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'template',
+                  template: parsedData.template,
+                  data: parsedData.data,
+                  messageId: aiMessageId,
+                }) + '\n',
+              ),
+            );
+
+            const templateMessageId = crypto.randomBytes(7).toString('hex');
+
+            db.insert(messagesSchema)
+              .values({
+                chatId: chatId,
+                messageId: templateMessageId,
+                role: 'template',
                 template: parsedData.template,
                 data: parsedData.data,
-                messageId: aiMessageId,
+                createdAt: new Date().toString(),
+              })
+              .execute()
+              .catch((dbError: any) => {
+                console.error('Error saving template to DB:', dbError);
+              });
+          } catch (writeError) {
+            console.error('Error writing template:', writeError);
+          }
+        }
+      } catch (error) {
+        console.error('Unexpected error in stream data handler:', error);
+      }
+    });
+    stream.on('end', () => {
+      if (streamErrored) {
+        resolve();
+        return;
+      }
+      streamEnded = true;
+      try {
+        // Ensure we write something if we have a message
+        if (receivedMessage.trim()) {
+          writer.write(
+            encoder.encode(
+              JSON.stringify({
+                type: 'messageEnd',
               }) + '\n',
             ),
           );
-
-          const templateMessageId = crypto.randomBytes(7).toString('hex');
-
-          db.insert(messagesSchema)
-            .values({
-              chatId: chatId,
-              messageId: templateMessageId,
-              role: 'template',
-              template: parsedData.template,
-              data: parsedData.data,
-              createdAt: new Date().toString(),
-            })
-            .execute()
-            .catch((dbError) => {
-              console.error('Error saving template to DB:', dbError);
-            });
-        } catch (writeError) {
-          console.error('Error writing template:', writeError);
         }
+        writer.close();
+        resolve();
+
+        db.insert(messagesSchema)
+          .values({
+            content: receivedMessage,
+            chatId: chatId,
+            messageId: aiMessageId,
+            role: 'assistant',
+            createdAt: new Date().toString(),
+          })
+          .execute()
+          .catch((dbError: any) => {
+            console.error('Error saving assistant message to DB:', dbError);
+          });
+      } catch (error) {
+        console.error('Error in stream end handler:', error);
+        try {
+          writer.close();
+        } catch (closeError) {
+          console.error('Error closing writer on end:', closeError);
+        }
+        resolve(); // Still resolve to prevent hanging
       }
-    } catch (error) {
-      console.error('Unexpected error in stream data handler:', error);
-    }
-  });
-  stream.on('end', () => {
-    try {
-      // Ensure we write something if we have a message
-      if (receivedMessage.trim()) {
+    });
+    
+    stream.on('error', (error) => {
+      if (streamEnded) return;
+      streamErrored = true;
+      console.error('Stream error:', error);
+      try {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         writer.write(
           encoder.encode(
             JSON.stringify({
-              type: 'messageEnd',
+              type: 'error',
+              data: errorMessage || 'An error occurred while processing your request',
             }) + '\n',
           ),
         );
-      }
-      writer.close();
-
-      db.insert(messagesSchema)
-        .values({
-          content: receivedMessage,
-          chatId: chatId,
-          messageId: aiMessageId,
-          role: 'assistant',
-          createdAt: new Date().toString(),
-        })
-        .execute()
-        .catch((dbError) => {
-          console.error('Error saving assistant message to DB:', dbError);
-        });
-    } catch (error) {
-      console.error('Error in stream end handler:', error);
-      try {
         writer.close();
-      } catch (closeError) {
-        console.error('Error closing writer on end:', closeError);
+      } catch (writeError) {
+        console.error('Error writing error message:', writeError);
+        try {
+          writer.close();
+        } catch (closeError) {
+          console.error('Error closing writer:', closeError);
+        }
       }
-    }
-  });
-  stream.on('error', (error) => {
-    console.error('Stream error:', error);
-    try {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      writer.write(
-        encoder.encode(
-          JSON.stringify({
-            type: 'error',
-            data: errorMessage || 'An error occurred while processing your request',
-          }) + '\n',
-        ),
-      );
-    } catch (writeError) {
-      console.error('Error writing error message:', writeError);
-    }
-    try {
-      writer.close();
-    } catch (closeError) {
-      console.error('Error closing writer:', closeError);
-    }
+      reject(error);
+    });
   });
 };
 
@@ -254,208 +304,560 @@ const handleHistorySave = async (
   focusMode: string,
   files: string[],
 ) => {
-  const chat = await db.query.chats.findFirst({
-    where: eq(chats.id, message.chatId),
-  });
+  try {
+    // Safely query database - handle mock database gracefully
+    let chat;
+    try {
+      chat = await db.query.chats.findFirst({
+        where: eq(chats.id, message.chatId),
+      });
+    } catch (queryError) {
+      console.warn('Error querying chat from DB (using mock?):', queryError);
+      chat = null;
+    }
 
-  const fileData = files.map(getFileDetails);
+    const fileData = files.map(getFileDetails);
 
-  if (!chat) {
-    await db
-      .insert(chats)
-      .values({
-        id: message.chatId,
-        title: message.content,
-        createdAt: new Date().toString(),
-        focusMode: focusMode,
-        files: fileData,
-      })
-      .execute();
-  } else if (JSON.stringify(chat.files ?? []) != JSON.stringify(fileData)) {
-    db.update(chats)
-      .set({
-        files: files.map(getFileDetails),
-      })
-      .where(eq(chats.id, message.chatId));
-  }
+    if (!chat) {
+      try {
+        await db
+          .insert(chats)
+          .values({
+            id: message.chatId,
+            title: message.content,
+            createdAt: new Date().toString(),
+            focusMode: focusMode,
+            files: fileData,
+          })
+          .execute();
+      } catch (insertError) {
+        console.warn('Error inserting chat to DB (using mock?):', insertError);
+      }
+    } else if (JSON.stringify(chat.files ?? []) != JSON.stringify(fileData)) {
+      try {
+        await db.update(chats)
+          .set({
+            files: files.map(getFileDetails),
+          })
+          .where(eq(chats.id, message.chatId))
+          .execute();
+      } catch (updateError) {
+        console.warn('Error updating chat in DB (using mock?):', updateError);
+      }
+    }
 
-  const messageExists = await db.query.messages.findFirst({
-    where: eq(messagesSchema.messageId, humanMessageId),
-  });
+    let messageExists;
+    try {
+      messageExists = await db.query.messages.findFirst({
+        where: eq(messagesSchema.messageId, humanMessageId),
+      });
+    } catch (queryError) {
+      console.warn('Error querying message from DB (using mock?):', queryError);
+      messageExists = null;
+    }
 
-  if (!messageExists) {
-    await db
-      .insert(messagesSchema)
-      .values({
-        content: message.content,
-        chatId: message.chatId,
-        messageId: humanMessageId,
-        role: 'user',
-        createdAt: new Date().toString(),
-      })
-      .execute();
-  } else {
-    await db
-      .delete(messagesSchema)
-      .where(
-        and(
-          gt(messagesSchema.id, messageExists.id),
-          eq(messagesSchema.chatId, message.chatId),
-        ),
-      )
-      .execute();
+    if (!messageExists) {
+      try {
+        await db
+          .insert(messagesSchema)
+          .values({
+            content: message.content,
+            chatId: message.chatId,
+            messageId: humanMessageId,
+            role: 'user',
+            createdAt: new Date().toString(),
+          })
+          .execute();
+      } catch (insertError) {
+        console.warn('Error inserting message to DB (using mock?):', insertError);
+      }
+    } else {
+      try {
+        await db
+          .delete(messagesSchema)
+          .where(
+            and(
+              gt(messagesSchema.id, messageExists.id),
+              eq(messagesSchema.chatId, message.chatId),
+            ),
+          )
+          .execute();
+      } catch (deleteError) {
+        console.warn('Error deleting messages from DB (using mock?):', deleteError);
+      }
+    }
+  } catch (error) {
+    // Don't throw - history save is non-critical
+    console.error('Error in handleHistorySave (non-critical):', error);
   }
 };
 
-export const POST = async (req: Request) => {
+const POSTHandler = async (req: Request): Promise<Response> => {
   try {
-    const reqBody = (await req.json()) as Body;
+    let reqBody: any;
+    try {
+      reqBody = await req.json();
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Invalid JSON in request body',
+          data: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
+        },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    // Validate required fields before processing
+    if (!reqBody || typeof reqBody !== 'object') {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Invalid request body',
+        },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
+    }
 
     const parseBody = safeValidateBody(reqBody);
     if (!parseBody.success) {
+      console.error('Invalid request body:', parseBody.error);
+      console.error('Request body received:', JSON.stringify(reqBody, null, 2));
       return Response.json(
-        { message: 'Invalid request body', error: parseBody.error },
-        { status: 400 },
+        {
+          type: 'error',
+          message: 'Invalid request body',
+          data: parseBody.error,
+          received: reqBody, // Include received body for debugging
+        },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
     const body = parseBody.data as Body;
     const { message } = body;
 
-    if (message.content === '') {
+    // Ensure optimizationMode has a default value
+    if (!body.optimizationMode) {
+      body.optimizationMode = 'speed';
+    }
+
+    // Ensure systemInstructions is always a string (not null)
+    if (body.systemInstructions === null || body.systemInstructions === undefined) {
+      body.systemInstructions = '';
+    }
+
+    // Validate message exists and has content
+    if (!message || !message.content || message.content.trim() === '') {
       return Response.json(
         {
+          type: 'error',
           message: 'Please provide a message to process',
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
-    const registry = new ModelRegistry();
+    // Validate chatModel and embeddingModel exist
+    if (!body.chatModel || !body.chatModel.providerId || !body.chatModel.key) {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Chat model configuration is missing',
+        },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
+    }
 
-    const [llm, embedding] = await Promise.all([
-      registry.loadChatModel(body.chatModel.providerId, body.chatModel.key),
-      registry.loadEmbeddingModel(
-        body.embeddingModel.providerId,
-        body.embeddingModel.key,
-      ),
-    ]);
+    if (!body.embeddingModel || !body.embeddingModel.providerId || !body.embeddingModel.key) {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Embedding model configuration is missing',
+        },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    // Validate focusMode
+    if (!body.focusMode || typeof body.focusMode !== 'string') {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Focus mode is required',
+        },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    let registry: ModelRegistry;
+    try {
+      registry = new ModelRegistry();
+      // Verify we have at least one provider configured
+      if (registry.activeProviders.length === 0) {
+        console.error('No active providers found in ModelRegistry');
+        return Response.json(
+          {
+            type: 'error',
+            data: 'No AI model providers are configured. Please configure a provider in settings.',
+          },
+          { 
+            status: 500,
+            headers: corsHeaders,
+          },
+        );
+      }
+    } catch (registryError) {
+      console.error('Error creating ModelRegistry:', registryError);
+      const errorDetails = registryError instanceof Error ? registryError.message : String(registryError);
+      const errorStack = registryError instanceof Error ? registryError.stack : undefined;
+      console.error('Registry error details:', { errorDetails, errorStack });
+      return Response.json(
+        {
+          type: 'error',
+          data: `Failed to initialize model registry: ${errorDetails}`,
+        },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    let llm, embedding;
+    try {
+      console.log('Loading models:', {
+        chatProviderId: body.chatModel.providerId,
+        chatModelKey: body.chatModel.key,
+        embeddingProviderId: body.embeddingModel.providerId,
+        embeddingModelKey: body.embeddingModel.key,
+      });
+      
+      [llm, embedding] = await Promise.all([
+        registry.loadChatModel(body.chatModel.providerId, body.chatModel.key),
+        registry.loadEmbeddingModel(
+          body.embeddingModel.providerId,
+          body.embeddingModel.key,
+        ),
+      ]);
+      
+      console.log('Models loaded successfully');
+    } catch (modelError) {
+      console.error('Error loading models:', modelError);
+      const errorDetails = modelError instanceof Error ? modelError.message : String(modelError);
+      const errorStack = modelError instanceof Error ? modelError.stack : undefined;
+      console.error('Model loading error details:', { errorDetails, errorStack });
+      
+      // Check if it's a provider not found error
+      if (errorDetails.includes('Invalid provider')) {
+        // Get available provider IDs for helpful error message
+        const availableProviderIds = registry.activeProviders.map((p) => p.id);
+        const requestedProviderIds = [body.chatModel.providerId, body.embeddingModel.providerId];
+        
+        return Response.json(
+          {
+            type: 'error',
+            message: 'Invalid provider ID detected. Please refresh your configuration.',
+            data: `Invalid provider id: ${requestedProviderIds.join(', ')}. Available providers: ${availableProviderIds.join(', ')}. Please refresh your browser or clear localStorage to fix this issue.`,
+            availableProviders: availableProviderIds,
+            requestedProviders: requestedProviderIds,
+            suggestion: 'The provider configuration may have changed. Please refresh the page to update your configuration.',
+          },
+          { 
+            status: 500,
+            headers: corsHeaders,
+          },
+        );
+      }
+      
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Failed to load AI models',
+          data: `Failed to load models: ${errorDetails}`,
+        },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
+      );
+    }
 
     const humanMessageId =
       message.messageId ?? crypto.randomBytes(7).toString('hex');
 
-    const history: BaseMessage[] = body.history.map((msg) => {
-      if (msg[0] === 'human') {
-        return new HumanMessage({
-          content: msg[1],
-        });
-      } else {
-        return new AIMessage({
-          content: msg[1],
-        });
-      }
-    });
+    // Safely build history array with validation
+    const history: BaseMessage[] = (body.history || [])
+      .map((msg): BaseMessage | null => {
+        if (!Array.isArray(msg) || msg.length !== 2) {
+          console.warn('Invalid history message format:', msg);
+          return null;
+        }
+        if (msg[0] === 'human') {
+          return new HumanMessage({
+            content: String(msg[1] || ''),
+          });
+        } else {
+          return new AIMessage({
+            content: String(msg[1] || ''),
+          });
+        }
+      })
+      .filter((msg): msg is BaseMessage => msg !== null);
 
     const handler = searchHandlers[body.focusMode];
 
     if (!handler) {
+      console.error('Invalid focus mode:', body.focusMode);
       return Response.json(
         {
-          message: 'Invalid focus mode',
+          type: 'error',
+          message: `Invalid focus mode: ${body.focusMode}`,
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
     let stream: EventEmitter;
     try {
+      console.log('Calling searchAndAnswer with:', {
+        focusMode: body.focusMode,
+        messageLength: message.content.length,
+        historyLength: history.length,
+        optimizationMode: body.optimizationMode,
+        filesCount: body.files.length,
+      });
+      
       stream = await handler.searchAndAnswer(
         message.content,
         history,
         llm,
         embedding,
-        body.optimizationMode,
-        body.files,
-        body.systemInstructions as string,
+        body.optimizationMode || 'speed', // Ensure it's always set
+        body.files || [], // Ensure it's always an array
+        (body.systemInstructions as string) || '', // Ensure it's always a string
       );
+      
+      console.log('searchAndAnswer returned successfully');
     } catch (streamError) {
       console.error('Error getting stream from handler:', streamError);
+      const errorDetails = streamError instanceof Error ? streamError.message : String(streamError);
+      const errorStack = streamError instanceof Error ? streamError.stack : undefined;
+      console.error('Stream error details:', { errorDetails, errorStack });
       return Response.json(
         {
           type: 'error',
-          data: streamError instanceof Error ? streamError.message : 'Failed to start processing',
+          data: `Failed to start processing: ${errorDetails}`,
         },
-        { status: 500 },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
       );
     }
 
-    const responseStream = new TransformStream();
-    const writer = responseStream.writable.getWriter();
-    const encoder = new TextEncoder();
+    let responseStream: TransformStream;
+    let writer: WritableStreamDefaultWriter;
+    let encoder: TextEncoder;
+    let timeoutId: NodeJS.Timeout;
 
-    // Set a timeout to ensure we send something if stream doesn't emit
-    const timeoutId = setTimeout(() => {
-      console.warn('Stream timeout - no data received after 60 seconds');
-      try {
-        writer.write(
-          encoder.encode(
-            JSON.stringify({
-              type: 'error',
-              data: 'Request timed out. The AI is taking longer than expected. Please try again.',
-            }) + '\n',
-          ),
-        );
-        writer.close();
-      } catch (error) {
-        console.error('Error writing timeout error:', error);
-      }
-    }, 60000);
+    try {
+      responseStream = new TransformStream();
+      writer = responseStream.writable.getWriter();
+      encoder = new TextEncoder();
 
-    // Note: Don't send empty message - let the stream handle first message
-    // This ensures proper message ID assignment
-
-    // Handle errors in the stream processing
-    handleEmitterEvents(stream, writer, encoder, message.chatId)
-      .then(() => {
-        clearTimeout(timeoutId);
-      })
-      .catch((error) => {
-        clearTimeout(timeoutId);
-        console.error('Error in handleEmitterEvents:', error);
+      // Set a timeout to ensure we send something if stream doesn't emit
+      timeoutId = setTimeout(() => {
+        console.warn('Stream timeout - no data received after 60 seconds');
         try {
           writer.write(
             encoder.encode(
               JSON.stringify({
                 type: 'error',
-                data: error instanceof Error ? error.message : 'An error occurred while processing your request',
+                data: 'Request timed out. The AI is taking longer than expected. Please try again.',
               }) + '\n',
             ),
           );
           writer.close();
-        } catch (writeError) {
-          console.error('Error writing error message:', writeError);
+        } catch (error) {
+          console.error('Error writing timeout error:', error);
         }
-      });
+      }, 60000);
+    } catch (streamInitError) {
+      console.error('Error initializing response stream:', streamInitError);
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Failed to initialize response stream',
+          data: streamInitError instanceof Error ? streamInitError.message : String(streamInitError),
+        },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
+      );
+    }
+
+    // Note: Don't send empty message - let the stream handle first message
+    // This ensures proper message ID assignment
+
+    // Wrap handleEmitterEvents in try-catch to catch any synchronous errors
+    try {
+      handleEmitterEvents(stream, writer, encoder, message.chatId)
+        .then(() => {
+          clearTimeout(timeoutId);
+          try {
+            writer.close();
+          } catch (closeError) {
+            console.error('Error closing writer:', closeError);
+          }
+        })
+        .catch((error) => {
+          clearTimeout(timeoutId);
+          console.error('Error in handleEmitterEvents:', error);
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'error',
+                  data: error instanceof Error ? error.message : 'An error occurred while processing your request',
+                }) + '\n',
+              ),
+            );
+            writer.close();
+          } catch (writeError) {
+            console.error('Error writing error message:', writeError);
+            try {
+              writer.close();
+            } catch (closeError) {
+              console.error('Error closing writer after error:', closeError);
+            }
+          }
+        });
+    } catch (syncError) {
+      // Catch any synchronous errors in setting up the stream handler
+      clearTimeout(timeoutId);
+      console.error('Synchronous error setting up stream handler:', syncError);
+      try {
+        writer.write(
+          encoder.encode(
+            JSON.stringify({
+              type: 'error',
+              data: syncError instanceof Error ? syncError.message : 'Failed to set up stream handler',
+            }) + '\n',
+          ),
+        );
+        writer.close();
+      } catch (writeError) {
+        console.error('Error writing sync error message:', writeError);
+        try {
+          writer.close();
+        } catch (closeError) {
+          console.error('Error closing writer:', closeError);
+        }
+      }
+    }
 
     // Don't await handleHistorySave - let it run in background
     handleHistorySave(message, humanMessageId, body.focusMode, body.files).catch(
-      (error) => {
+      (error: any) => {
         console.error('Error saving history:', error);
       },
     );
+
+    // Ensure responseStream is defined before returning
+    if (!responseStream || !responseStream.readable) {
+      console.error('Response stream is invalid');
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Failed to create response stream',
+        },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
+      );
+    }
 
     return new Response(responseStream.readable, {
       headers: {
         'Content-Type': 'text/event-stream',
         Connection: 'keep-alive',
         'Cache-Control': 'no-cache, no-transform',
+        ...corsHeaders,
       },
     });
   } catch (err) {
-    console.error('An error occurred while processing chat request:', err);
-    return Response.json(
-      { message: 'An error occurred while processing chat request' },
-      { status: 500 },
-    );
+    return handleRouteError(err, 'POST /api/chat');
+  }
+};
+
+// Export with additional error boundary - catches any unhandled errors
+export const POST = async (req: Request): Promise<Response> => {
+  try {
+    console.log('[POST /api/chat] Request received');
+    const response = await POSTHandler(req);
+    console.log('[POST /api/chat] Response generated successfully');
+    return response;
+  } catch (outerError) {
+    // This catches any errors that escape the inner try-catch
+    console.error('[POST /api/chat] Fatal error in POST handler:', outerError);
+    const errorMessage = outerError instanceof Error ? outerError.message : String(outerError);
+    const errorStack = outerError instanceof Error ? outerError.stack : undefined;
+    console.error('[POST /api/chat] Fatal error details:', { errorMessage, errorStack });
+    
+    try {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'A fatal error occurred',
+          data: errorMessage,
+        },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
+      );
+    } catch (responseError) {
+      // If even creating the error response fails, log it
+      console.error('[POST /api/chat] Failed to create error response:', responseError);
+      // Return a plain text error as last resort
+      return new Response(
+        `Internal Server Error: ${errorMessage}`,
+        { 
+          status: 500, 
+          headers: { 
+            'Content-Type': 'text/plain',
+            ...corsHeaders,
+          } 
+        }
+      );
+    }
   }
 };
