@@ -62,8 +62,11 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
               // Clear any stored chat state when starting new chat
               if (typeof window !== 'undefined') {
                 localStorage.removeItem('currentChatId');
-                // Force navigation to home page
-                window.location.href = '/';
+                // If we're not already on home, navigate there
+                if (window.location.pathname !== '/') {
+                  e.preventDefault();
+                  window.location.href = '/';
+                }
               }
             }}
           >
