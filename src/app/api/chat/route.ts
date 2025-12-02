@@ -590,9 +590,9 @@ const POSTHandler = async (req: Request): Promise<Response> => {
         history,
         llm,
         embedding,
-        body.optimizationMode,
-        body.files,
-        body.systemInstructions as string,
+        body.optimizationMode || 'speed', // Ensure it's always set
+        body.files || [], // Ensure it's always an array
+        (body.systemInstructions as string) || '', // Ensure it's always a string
       );
       
       console.log('searchAndAnswer returned successfully');
