@@ -376,6 +376,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const sections = useMemo<Section[]>(() => {
     const sections: Section[] = [];
 
+    // Ensure messages is an array before processing
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return sections;
+    }
+
     messages.forEach((msg, i) => {
       if (msg.role === 'user') {
         const nextUserMessageIndex = messages.findIndex(
@@ -424,6 +429,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           if (
             sourceMessage &&
             sourceMessage.sources &&
+            Array.isArray(sourceMessage.sources) &&
             sourceMessage.sources.length > 0
           ) {
             processedMessage = processedMessage.replace(
@@ -468,7 +474,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
               (nextUserMessageIndex === -1 || j < nextUserMessageIndex),
           ) as SuggestionMessage | undefined;
 
-          if (suggestionMessage && suggestionMessage.suggestions.length > 0) {
+          if (
+            suggestionMessage &&
+            suggestionMessage.suggestions &&
+            Array.isArray(suggestionMessage.suggestions) &&
+            suggestionMessage.suggestions.length > 0
+          ) {
             suggestions = suggestionMessage.suggestions;
           }
         }
@@ -660,12 +671,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data.type === 'sources') {
+        // Ensure data.data is an array
+        const sources = Array.isArray(data.data) ? data.data : [];
+        
         // Save source message to IndexedDB
         await saveMessage({
           messageId: data.messageId,
           chatId: chatId!,
           role: 'source',
-          sources: data.data,
+          sources: sources,
           createdAt: new Date().toISOString(),
         });
 
@@ -675,11 +689,11 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             messageId: data.messageId,
             chatId: chatId!,
             role: 'source',
-            sources: data.data,
+            sources: sources,
             createdAt: new Date(),
           },
         ]);
-        if (data.data.length > 0) {
+        if (sources.length > 0) {
           setMessageAppeared(true);
         }
       }
@@ -710,12 +724,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       if (data.type === 'message') {
+        // Ensure data.data is a string
+        const messageData = typeof data.data === 'string' ? data.data : String(data.data || '');
+        
         if (!added) {
           assistantMessageId = data.messageId;
           setMessages((prevMessages) => [
             ...prevMessages,
             {
-              content: data.data,
+              content: messageData,
               messageId: data.messageId,
               chatId: chatId!,
               role: 'assistant',
@@ -731,14 +748,15 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
                 message.messageId === data.messageId &&
                 message.role === 'assistant'
               ) {
-                return { ...message, content: message.content + data.data };
+                const currentContent = typeof message.content === 'string' ? message.content : '';
+                return { ...message, content: currentContent + messageData };
               }
 
               return message;
             }),
           );
         }
-        recievedMessage += data.data;
+        recievedMessage += messageData;
       }
 
       if (data.type === 'messageEnd') {
@@ -789,6 +807,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (
           sourceMessage &&
+          sourceMessage.sources &&
+          Array.isArray(sourceMessage.sources) &&
           sourceMessage.sources.length > 0 &&
           suggestionMessageIndex == -1
         ) {
