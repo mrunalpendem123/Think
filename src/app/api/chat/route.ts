@@ -67,11 +67,7 @@ const bodySchema = z.object({
   // Accept extra fields from client but don't require them
   content: z.string().optional(), // Client sends this, we'll use message.content instead
   chatId: z.string().optional(), // Client sends this, we'll use message.chatId instead
-  optimizationMode: z.enum(['speed', 'balanced', 'quality'], {
-    errorMap: () => ({
-      message: 'Optimization mode must be one of: speed, balanced, quality',
-    }),
-  }),
+  optimizationMode: z.enum(['speed', 'balanced', 'quality']).optional().default('speed'),
   focusMode: z.string().min(1, 'Focus mode is required'),
   history: z
     .array(
@@ -409,11 +405,13 @@ const POSTHandler = async (req: Request): Promise<Response> => {
     const parseBody = safeValidateBody(reqBody);
     if (!parseBody.success) {
       console.error('Invalid request body:', parseBody.error);
+      console.error('Request body received:', JSON.stringify(reqBody, null, 2));
       return Response.json(
         {
           type: 'error',
           message: 'Invalid request body',
           data: parseBody.error,
+          received: reqBody, // Include received body for debugging
         },
         { status: 400 },
       );
