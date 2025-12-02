@@ -13,6 +13,21 @@ import { ModelWithProvider } from '@/lib/models/types';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+// Handle OPTIONS request for CORS
+export const OPTIONS = async () => {
+  return new Response(null, {
+    status: 200,
+    headers: corsHeaders,
+  });
+};
+
 // Global error handler wrapper
 const handleRouteError = (error: unknown, context: string): Response => {
   console.error(`[${context}] Error:`, error);
@@ -26,7 +41,10 @@ const handleRouteError = (error: unknown, context: string): Response => {
       message: 'An error occurred while processing your request',
       data: errorMessage,
     },
-    { status: 500 },
+    { 
+      status: 500,
+      headers: corsHeaders,
+    },
   );
 };
 
@@ -387,7 +405,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           message: 'Invalid JSON in request body',
           data: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -398,7 +419,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           message: 'Invalid request body',
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -413,7 +437,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           data: parseBody.error,
           received: reqBody, // Include received body for debugging
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -432,7 +459,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           message: 'Please provide a message to process',
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -443,7 +473,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           message: 'Chat model configuration is missing',
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -453,7 +486,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           message: 'Embedding model configuration is missing',
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -464,7 +500,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           message: 'Focus mode is required',
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -479,7 +518,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
             type: 'error',
             data: 'No AI model providers are configured. Please configure a provider in settings.',
           },
-          { status: 500 },
+          { 
+            status: 500,
+            headers: corsHeaders,
+          },
         );
       }
     } catch (registryError) {
@@ -492,7 +534,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           data: `Failed to initialize model registry: ${errorDetails}`,
         },
-        { status: 500 },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -527,7 +572,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
             type: 'error',
             data: `Model provider not found. Please ensure your AI provider is properly configured.`,
           },
-          { status: 500 },
+          { 
+            status: 500,
+            headers: corsHeaders,
+          },
         );
       }
       
@@ -536,7 +584,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           data: `Failed to load models: ${errorDetails}`,
         },
-        { status: 500 },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -571,7 +622,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           message: `Invalid focus mode: ${body.focusMode}`,
         },
-        { status: 400 },
+        { 
+          status: 400,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -606,7 +660,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           data: `Failed to start processing: ${errorDetails}`,
         },
-        { status: 500 },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -645,7 +702,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           message: 'Failed to initialize response stream',
           data: streamInitError instanceof Error ? streamInitError.message : String(streamInitError),
         },
-        { status: 500 },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -724,7 +784,10 @@ const POSTHandler = async (req: Request): Promise<Response> => {
           type: 'error',
           message: 'Failed to create response stream',
         },
-        { status: 500 },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
       );
     }
 
@@ -733,6 +796,7 @@ const POSTHandler = async (req: Request): Promise<Response> => {
         'Content-Type': 'text/event-stream',
         Connection: 'keep-alive',
         'Cache-Control': 'no-cache, no-transform',
+        ...corsHeaders,
       },
     });
   } catch (err) {
@@ -761,7 +825,10 @@ export const POST = async (req: Request): Promise<Response> => {
           message: 'A fatal error occurred',
           data: errorMessage,
         },
-        { status: 500 },
+        { 
+          status: 500,
+          headers: corsHeaders,
+        },
       );
     } catch (responseError) {
       // If even creating the error response fails, log it
@@ -769,7 +836,13 @@ export const POST = async (req: Request): Promise<Response> => {
       // Return a plain text error as last resort
       return new Response(
         `Internal Server Error: ${errorMessage}`,
-        { status: 500, headers: { 'Content-Type': 'text/plain' } }
+        { 
+          status: 500, 
+          headers: { 
+            'Content-Type': 'text/plain',
+            ...corsHeaders,
+          } 
+        }
       );
     }
   }

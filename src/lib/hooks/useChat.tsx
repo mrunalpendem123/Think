@@ -815,19 +815,27 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           sourceMessage.sources.length > 0 &&
           suggestionMessageIndex == -1
         ) {
-          const suggestions = await getSuggestions(messagesRef.current);
-          setMessages((prev) => {
-            return [
-              ...prev,
-              {
-                role: 'suggestion',
-                suggestions: suggestions,
-                chatId: chatId!,
-                createdAt: new Date(),
-                messageId: randomHex(14),
-              },
-            ];
-          });
+          try {
+            const suggestions = await getSuggestions(messagesRef.current);
+            // Only add suggestions if we got valid ones
+            if (suggestions && Array.isArray(suggestions) && suggestions.length > 0) {
+              setMessages((prev) => {
+                return [
+                  ...prev,
+                  {
+                    role: 'suggestion',
+                    suggestions: suggestions,
+                    chatId: chatId!,
+                    createdAt: new Date(),
+                    messageId: randomHex(14),
+                  },
+                ];
+              });
+            }
+          } catch (error) {
+            console.error('[useChat] Error fetching suggestions:', error);
+            // Silently fail - suggestions are optional
+          }
         }
       }
     };
