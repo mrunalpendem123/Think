@@ -309,13 +309,41 @@ const handleHistorySave = async (
 
 export const POST = async (req: Request) => {
   try {
-    const reqBody = (await req.json()) as Body;
+    let reqBody: any;
+    try {
+      reqBody = await req.json();
+    } catch (parseError) {
+      console.error('Error parsing request body:', parseError);
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Invalid JSON in request body',
+          data: parseError instanceof Error ? parseError.message : 'Unknown parsing error',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate required fields before processing
+    if (!reqBody || typeof reqBody !== 'object') {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Invalid request body',
+        },
+        { status: 400 },
+      );
+    }
 
     const parseBody = safeValidateBody(reqBody);
     if (!parseBody.success) {
       console.error('Invalid request body:', parseBody.error);
       return Response.json(
-        { message: 'Invalid request body', error: parseBody.error },
+        {
+          type: 'error',
+          message: 'Invalid request body',
+          data: parseBody.error,
+        },
         { status: 400 },
       );
     }
@@ -323,10 +351,44 @@ export const POST = async (req: Request) => {
     const body = parseBody.data as Body;
     const { message } = body;
 
-    if (message.content === '') {
+    // Validate message exists and has content
+    if (!message || !message.content || message.content.trim() === '') {
       return Response.json(
         {
+          type: 'error',
           message: 'Please provide a message to process',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate chatModel and embeddingModel exist
+    if (!body.chatModel || !body.chatModel.providerId || !body.chatModel.key) {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Chat model configuration is missing',
+        },
+        { status: 400 },
+      );
+    }
+
+    if (!body.embeddingModel || !body.embeddingModel.providerId || !body.embeddingModel.key) {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Embedding model configuration is missing',
+        },
+        { status: 400 },
+      );
+    }
+
+    // Validate focusMode
+    if (!body.focusMode || typeof body.focusMode !== 'string') {
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Focus mode is required',
         },
         { status: 400 },
       );
@@ -407,17 +469,24 @@ export const POST = async (req: Request) => {
     const humanMessageId =
       message.messageId ?? crypto.randomBytes(7).toString('hex');
 
-    const history: BaseMessage[] = body.history.map((msg) => {
-      if (msg[0] === 'human') {
-        return new HumanMessage({
-          content: msg[1],
-        });
-      } else {
-        return new AIMessage({
-          content: msg[1],
-        });
-      }
-    });
+    // Safely build history array with validation
+    const history: BaseMessage[] = (body.history || [])
+      .map((msg): BaseMessage | null => {
+        if (!Array.isArray(msg) || msg.length !== 2) {
+          console.warn('Invalid history message format:', msg);
+          return null;
+        }
+        if (msg[0] === 'human') {
+          return new HumanMessage({
+            content: String(msg[1] || ''),
+          });
+        } else {
+          return new AIMessage({
+            content: String(msg[1] || ''),
+          });
+        }
+      })
+      .filter((msg): msg is BaseMessage => msg !== null);
 
     const handler = searchHandlers[body.focusMode];
 
@@ -492,10 +561,14 @@ export const POST = async (req: Request) => {
     // Note: Don't send empty message - let the stream handle first message
     // This ensures proper message ID assignment
 
-    // Handle errors in the stream processing
     handleEmitterEvents(stream, writer, encoder, message.chatId)
       .then(() => {
         clearTimeout(timeoutId);
+        try {
+          writer.close();
+        } catch (closeError) {
+          console.error('Error closing writer:', closeError);
+        }
       })
       .catch((error) => {
         clearTimeout(timeoutId);
@@ -512,6 +585,11 @@ export const POST = async (req: Request) => {
           writer.close();
         } catch (writeError) {
           console.error('Error writing error message:', writeError);
+          try {
+            writer.close();
+          } catch (closeError) {
+            console.error('Error closing writer after error:', closeError);
+          }
         }
       });
 
