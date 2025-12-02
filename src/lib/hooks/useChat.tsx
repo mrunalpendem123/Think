@@ -875,21 +875,21 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             content: message, // Store original message without context
           },
           chatId: chatId!,
-          files: fileIds,
-          focusMode: focusMode,
-          optimizationMode: optimizationMode,
+          files: fileIds || [],
+          focusMode: focusMode || 'webSearch',
+          optimizationMode: optimizationMode || 'speed',
           history: rewrite
             ? chatHistory.slice(0, messageIndex === -1 ? undefined : messageIndex)
-            : chatHistory,
+            : chatHistory || [],
           chatModel: {
-            key: chatModelProvider.key,
-            providerId: chatModelProvider.providerId,
+            key: chatModelProvider.key || '',
+            providerId: chatModelProvider.providerId || '',
           },
           embeddingModel: {
-            key: embeddingModelProvider.key,
-            providerId: embeddingModelProvider.providerId,
+            key: embeddingModelProvider.key || '',
+            providerId: embeddingModelProvider.providerId || '',
           },
-          systemInstructions: localStorage.getItem('systemInstructions'),
+          systemInstructions: localStorage.getItem('systemInstructions') || '',
         }),
       });
 

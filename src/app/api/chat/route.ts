@@ -452,6 +452,11 @@ const POSTHandler = async (req: Request): Promise<Response> => {
       body.optimizationMode = 'speed';
     }
 
+    // Ensure systemInstructions is always a string (not null)
+    if (body.systemInstructions === null || body.systemInstructions === undefined) {
+      body.systemInstructions = '';
+    }
+
     // Validate message exists and has content
     if (!message || !message.content || message.content.trim() === '') {
       return Response.json(
