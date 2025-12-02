@@ -64,6 +64,9 @@ const embeddingModelSchema: z.ZodType<ModelWithProvider> = z.object({
 
 const bodySchema = z.object({
   message: messageSchema,
+  // Accept extra fields from client but don't require them
+  content: z.string().optional(), // Client sends this, we'll use message.content instead
+  chatId: z.string().optional(), // Client sends this, we'll use message.chatId instead
   optimizationMode: z.enum(['speed', 'balanced', 'quality'], {
     errorMap: () => ({
       message: 'Optimization mode must be one of: speed, balanced, quality',
@@ -84,7 +87,7 @@ const bodySchema = z.object({
   chatModel: chatModelSchema,
   embeddingModel: embeddingModelSchema,
   systemInstructions: z.string().nullable().optional().default(''),
-});
+}).passthrough(); // Allow extra fields without validation errors
 
 type Message = z.infer<typeof messageSchema>;
 type Body = z.infer<typeof bodySchema>;
@@ -113,155 +116,171 @@ const handleEmitterEvents = async (
   writer: WritableStreamDefaultWriter,
   encoder: TextEncoder,
   chatId: string,
-) => {
-  let receivedMessage = '';
-  const aiMessageId = crypto.randomBytes(7).toString('hex');
+): Promise<void> => {
+  return new Promise((resolve, reject) => {
+    let receivedMessage = '';
+    const aiMessageId = crypto.randomBytes(7).toString('hex');
+    let streamEnded = false;
+    let streamErrored = false;
 
-  stream.on('data', (data) => {
-    try {
-      let parsedData;
+    stream.on('data', (data) => {
       try {
-        parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-      } catch (parseError) {
-        console.error('Error parsing stream data:', parseError, 'Data:', data);
-        return;
-      }
-
-      if (parsedData.type === 'response') {
+        let parsedData;
         try {
-          writer.write(
-            encoder.encode(
-              JSON.stringify({
-                type: 'message',
-                data: parsedData.data,
-                messageId: aiMessageId,
-              }) + '\n',
-            ),
-          );
-          receivedMessage += parsedData.data || '';
-        } catch (writeError) {
-          console.error('Error writing message:', writeError);
+          parsedData = typeof data === 'string' ? JSON.parse(data) : data;
+        } catch (parseError) {
+          console.error('Error parsing stream data:', parseError, 'Data:', data);
+          return;
         }
-      } else if (parsedData.type === 'sources') {
-        try {
-          writer.write(
-            encoder.encode(
-              JSON.stringify({
-                type: 'sources',
-                data: parsedData.data,
-                messageId: aiMessageId,
-              }) + '\n',
-            ),
-          );
 
-          const sourceMessageId = crypto.randomBytes(7).toString('hex');
+        if (parsedData.type === 'response') {
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'message',
+                  data: parsedData.data,
+                  messageId: aiMessageId,
+                }) + '\n',
+              ),
+            );
+            receivedMessage += parsedData.data || '';
+          } catch (writeError) {
+            console.error('Error writing message:', writeError);
+          }
+        } else if (parsedData.type === 'sources') {
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'sources',
+                  data: parsedData.data,
+                  messageId: aiMessageId,
+                }) + '\n',
+              ),
+            );
 
-          db.insert(messagesSchema)
-            .values({
-              chatId: chatId,
-              messageId: sourceMessageId,
-              role: 'source',
-              sources: parsedData.data,
-              createdAt: new Date().toString(),
-            })
-            .execute()
-            .catch((dbError: any) => {
-              console.error('Error saving sources to DB:', dbError);
-            });
-        } catch (writeError) {
-          console.error('Error writing sources:', writeError);
-        }
-      } else if (parsedData.type === 'template') {
-        try {
-          writer.write(
-            encoder.encode(
-              JSON.stringify({
-                type: 'template',
+            const sourceMessageId = crypto.randomBytes(7).toString('hex');
+
+            db.insert(messagesSchema)
+              .values({
+                chatId: chatId,
+                messageId: sourceMessageId,
+                role: 'source',
+                sources: parsedData.data,
+                createdAt: new Date().toString(),
+              })
+              .execute()
+              .catch((dbError: any) => {
+                console.error('Error saving sources to DB:', dbError);
+              });
+          } catch (writeError) {
+            console.error('Error writing sources:', writeError);
+          }
+        } else if (parsedData.type === 'template') {
+          try {
+            writer.write(
+              encoder.encode(
+                JSON.stringify({
+                  type: 'template',
+                  template: parsedData.template,
+                  data: parsedData.data,
+                  messageId: aiMessageId,
+                }) + '\n',
+              ),
+            );
+
+            const templateMessageId = crypto.randomBytes(7).toString('hex');
+
+            db.insert(messagesSchema)
+              .values({
+                chatId: chatId,
+                messageId: templateMessageId,
+                role: 'template',
                 template: parsedData.template,
                 data: parsedData.data,
-                messageId: aiMessageId,
+                createdAt: new Date().toString(),
+              })
+              .execute()
+              .catch((dbError: any) => {
+                console.error('Error saving template to DB:', dbError);
+              });
+          } catch (writeError) {
+            console.error('Error writing template:', writeError);
+          }
+        }
+      } catch (error) {
+        console.error('Unexpected error in stream data handler:', error);
+      }
+    });
+    stream.on('end', () => {
+      if (streamErrored) {
+        resolve();
+        return;
+      }
+      streamEnded = true;
+      try {
+        // Ensure we write something if we have a message
+        if (receivedMessage.trim()) {
+          writer.write(
+            encoder.encode(
+              JSON.stringify({
+                type: 'messageEnd',
               }) + '\n',
             ),
           );
-
-          const templateMessageId = crypto.randomBytes(7).toString('hex');
-
-          db.insert(messagesSchema)
-            .values({
-              chatId: chatId,
-              messageId: templateMessageId,
-              role: 'template',
-              template: parsedData.template,
-              data: parsedData.data,
-              createdAt: new Date().toString(),
-            })
-            .execute()
-            .catch((dbError: any) => {
-              console.error('Error saving template to DB:', dbError);
-            });
-        } catch (writeError) {
-          console.error('Error writing template:', writeError);
         }
+        writer.close();
+        resolve();
+
+        db.insert(messagesSchema)
+          .values({
+            content: receivedMessage,
+            chatId: chatId,
+            messageId: aiMessageId,
+            role: 'assistant',
+            createdAt: new Date().toString(),
+          })
+          .execute()
+          .catch((dbError: any) => {
+            console.error('Error saving assistant message to DB:', dbError);
+          });
+      } catch (error) {
+        console.error('Error in stream end handler:', error);
+        try {
+          writer.close();
+        } catch (closeError) {
+          console.error('Error closing writer on end:', closeError);
+        }
+        resolve(); // Still resolve to prevent hanging
       }
-    } catch (error) {
-      console.error('Unexpected error in stream data handler:', error);
-    }
-  });
-  stream.on('end', () => {
-    try {
-      // Ensure we write something if we have a message
-      if (receivedMessage.trim()) {
+    });
+    
+    stream.on('error', (error) => {
+      if (streamEnded) return;
+      streamErrored = true;
+      console.error('Stream error:', error);
+      try {
+        const errorMessage = error instanceof Error ? error.message : String(error);
         writer.write(
           encoder.encode(
             JSON.stringify({
-              type: 'messageEnd',
+              type: 'error',
+              data: errorMessage || 'An error occurred while processing your request',
             }) + '\n',
           ),
         );
-      }
-      writer.close();
-
-      db.insert(messagesSchema)
-        .values({
-          content: receivedMessage,
-          chatId: chatId,
-          messageId: aiMessageId,
-          role: 'assistant',
-          createdAt: new Date().toString(),
-        })
-        .execute()
-        .catch((dbError: any) => {
-          console.error('Error saving assistant message to DB:', dbError);
-        });
-    } catch (error) {
-      console.error('Error in stream end handler:', error);
-      try {
         writer.close();
-      } catch (closeError) {
-        console.error('Error closing writer on end:', closeError);
+      } catch (writeError) {
+        console.error('Error writing error message:', writeError);
+        try {
+          writer.close();
+        } catch (closeError) {
+          console.error('Error closing writer:', closeError);
+        }
       }
-    }
-  });
-  stream.on('error', (error) => {
-    console.error('Stream error:', error);
-    try {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      writer.write(
-        encoder.encode(
-          JSON.stringify({
-            type: 'error',
-            data: errorMessage || 'An error occurred while processing your request',
-          }) + '\n',
-        ),
-      );
-    } catch (writeError) {
-      console.error('Error writing error message:', writeError);
-    }
-    try {
-      writer.close();
-    } catch (closeError) {
-      console.error('Error closing writer:', closeError);
-    }
+      reject(error);
+    });
   });
 };
 
