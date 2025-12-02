@@ -114,11 +114,11 @@ class ConfigManager {
       {
         name: 'Additional SearXNG Fallback URLs',
         key: 'searxngFallbackURLs',
-        type: 'array',
+        type: 'string',
         required: false,
         description: 'Additional fallback SearXNG instance URLs (optional). Multiple instances can be configured for better reliability.',
         placeholder: 'https://instance1.com,https://instance2.com',
-        default: [],
+        default: '',
         scope: 'server',
         env: 'SEARXNG_FALLBACK_URLS',
       },
@@ -381,17 +381,12 @@ class ConfigManager {
     /* search section */
     this.uiConfigSections.search.forEach((f) => {
       if (f.env && !this.currentConfig.search[f.key]) {
-        if (f.type === 'array') {
-          // Handle array types (comma-separated string from env)
-          const envValue = process.env[f.env];
-          if (envValue) {
-            this.currentConfig.search[f.key] = envValue.split(',').map((url: string) => url.trim()).filter(Boolean);
-          } else {
-            this.currentConfig.search[f.key] = f.default ?? [];
-          }
+        const envValue = process.env[f.env];
+        // Handle searxngFallbackURLs as comma-separated string that gets split into array
+        if (f.key === 'searxngFallbackURLs' && envValue) {
+          this.currentConfig.search[f.key] = envValue.split(',').map((url: string) => url.trim()).filter(Boolean);
         } else {
-          this.currentConfig.search[f.key] =
-            process.env[f.env] ?? f.default ?? '';
+          this.currentConfig.search[f.key] = envValue ?? f.default ?? '';
         }
       }
     });

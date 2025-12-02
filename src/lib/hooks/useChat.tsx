@@ -6,6 +6,7 @@ import {
   Message,
   SourceMessage,
   SuggestionMessage,
+  TemplateMessage,
   UserMessage,
 } from '@/components/ChatWindow';
 import {
@@ -210,10 +211,16 @@ const loadMessages = async (
     }
 
     const messages = await getMessages(chatId);
+    
+    // Convert createdAt strings to Date objects
+    const convertedMessages = messages.map((msg) => ({
+      ...msg,
+      createdAt: new Date(msg.createdAt),
+    })) as unknown as Message[];
 
-    setMessages(messages as Message[]);
+    setMessages(convertedMessages);
 
-    const chatTurns = messages.filter(
+    const chatTurns = convertedMessages.filter(
       (msg): msg is ChatTurn => msg.role === 'user' || msg.role === 'assistant',
     );
 
@@ -653,8 +660,8 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           role: 'template',
           template: data.template,
           data: data.data,
-          createdAt: new Date().toISOString(),
-        });
+          createdAt: new Date(),
+        } as TemplateMessage);
 
         setMessages((prevMessages) => [
           ...prevMessages,

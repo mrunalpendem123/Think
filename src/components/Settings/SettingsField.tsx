@@ -1,16 +1,17 @@
 import {
-  SelectUIConfigField,
-  StringUIConfigField,
-  SwitchUIConfigField,
-  TextareaUIConfigField,
-  UIConfigField,
+    PasswordUIConfigField,
+    SelectUIConfigField,
+    StringUIConfigField,
+    SwitchUIConfigField,
+    TextareaUIConfigField,
+    UIConfigField,
 } from '@/lib/config/types';
-import { useState } from 'react';
-import Select from '../ui/Select';
-import { toast } from 'sonner';
-import { useTheme } from 'next-themes';
-import { Loader2 } from 'lucide-react';
 import { Switch } from '@headlessui/react';
+import { Loader2 } from 'lucide-react';
+import { useTheme } from 'next-themes';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import Select from '../ui/Select';
 
 const SettingsSelect = ({
   field,
@@ -361,9 +362,6 @@ const SettingsField = ({
           dataAdd={dataAdd}
         />
       );
-    case 'array':
-      // Array fields are not displayed in the UI - they're configured via environment variables
-      return null;
     default:
       // Don't render unsupported field types
       return null;

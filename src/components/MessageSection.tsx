@@ -1,20 +1,19 @@
 'use client';
 
-import React, { useRef } from 'react';
 import { Section } from '@/lib/hooks/useChat';
-import SourcesTemplate from './templates/SourcesTemplate';
-import ChartTemplate from './templates/ChartTemplate';
-import StockChartTemplate from './templates/StockChartTemplate';
+import { BookCopy, Plus, StopCircle, Volume2 } from 'lucide-react';
 import Markdown from 'markdown-to-jsx';
-import { BookCopy, Plus } from 'lucide-react';
-import Copy from './MessageActions/Copy';
-import Rewrite from './MessageActions/Rewrite';
-import Reply from './MessageActions/Reply';
-import Like from './MessageActions/Like';
-import TextSelectionReply from './TextSelectionReply';
-import { Volume2, StopCircle } from 'lucide-react';
+import React, { useRef } from 'react';
 import { useSpeech } from 'react-text-to-speech';
 import Citation from './Citation';
+import Copy from './MessageActions/Copy';
+import Like from './MessageActions/Like';
+import Reply from './MessageActions/Reply';
+import Rewrite from './MessageActions/Rewrite';
+import ChartTemplate from './templates/ChartTemplate';
+import SourcesTemplate from './templates/SourcesTemplate';
+import StockChartTemplate from './templates/StockChartTemplate';
+import TextSelectionReply from './TextSelectionReply';
 
 interface MessageSectionProps {
   section: Section;
@@ -207,7 +206,7 @@ const MessageSection: React.FC<MessageSectionProps> = ({
                     {/* Message Actions */}
                     {loading && isLast ? null : (
                       <div className="flex flex-row items-center space-x-2 -ml-2 mt-4">
-                        <Copy text={parsedMessage} />
+                        <Copy section={section} initialMessage={parsedMessage} />
                         {speechMessage.length > 0 && (
                           <button
                             onClick={() => {

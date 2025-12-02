@@ -1,5 +1,6 @@
-import { Message, Section } from '@/lib/hooks/useChat';
+import { Section } from '@/lib/hooks/useChat';
 import {
+  Message,
   AssistantMessage,
   UserMessage,
   SourceMessage,

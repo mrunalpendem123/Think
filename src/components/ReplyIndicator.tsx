@@ -19,7 +19,7 @@ const ReplyIndicator = ({
         </p>
         {replyingToText ? (
           <p className="text-sm text-black/80 dark:text-white/80 line-clamp-2 italic">
-            "{replyingToText}"
+            &ldquo;{replyingToText}&rdquo;
           </p>
         ) : (
           <>
