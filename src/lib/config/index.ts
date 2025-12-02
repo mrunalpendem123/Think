@@ -168,44 +168,75 @@ class ConfigManager {
   }
 
   private saveConfig() {
-    fs.writeFileSync(
-      this.configPath,
-      JSON.stringify(this.currentConfig, null, 2),
-    );
-  }
-
-  private initializeConfig() {
-    const exists = fs.existsSync(this.configPath);
-    if (!exists) {
+    try {
+      // Ensure directory exists
+      const dir = path.dirname(this.configPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
       fs.writeFileSync(
         this.configPath,
         JSON.stringify(this.currentConfig, null, 2),
       );
-    } else {
-      try {
-        this.currentConfig = JSON.parse(
-          fs.readFileSync(this.configPath, 'utf-8'),
-        );
-      } catch (err) {
-        if (err instanceof SyntaxError) {
-          console.error(
-            `Error parsing config file at ${this.configPath}:`,
-            err,
-          );
-          console.log(
-            'Loading default config and overwriting the existing file.',
-          );
+    } catch (error) {
+      // On Vercel or other read-only filesystems, config writes may fail
+      // Log warning but don't throw - use in-memory config only
+      console.warn('Could not save config to file system (read-only?):', error);
+    }
+  }
+
+  private initializeConfig() {
+    try {
+      const exists = fs.existsSync(this.configPath);
+      if (!exists) {
+        // Try to create config file, but don't fail if filesystem is read-only
+        try {
+          const dir = path.dirname(this.configPath);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
           fs.writeFileSync(
             this.configPath,
             JSON.stringify(this.currentConfig, null, 2),
           );
-          return;
-        } else {
-          console.log('Unknown error reading config file:', err);
+        } catch (writeError) {
+          console.warn('Could not create config file (read-only filesystem?):', writeError);
+          // Continue with default config in memory
         }
-      }
+      } else {
+        try {
+          this.currentConfig = JSON.parse(
+            fs.readFileSync(this.configPath, 'utf-8'),
+          );
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            console.error(
+              `Error parsing config file at ${this.configPath}:`,
+              err,
+            );
+            console.log(
+              'Loading default config and overwriting the existing file.',
+            );
+            try {
+              fs.writeFileSync(
+                this.configPath,
+                JSON.stringify(this.currentConfig, null, 2),
+              );
+            } catch (writeError) {
+              console.warn('Could not overwrite config file:', writeError);
+            }
+            return;
+          } else {
+            console.log('Unknown error reading config file:', err);
+          }
+        }
 
-      this.currentConfig = this.migrateConfig(this.currentConfig);
+        this.currentConfig = this.migrateConfig(this.currentConfig);
+      }
+    } catch (error) {
+      // If filesystem operations fail entirely (e.g., on Vercel), use default config
+      console.warn('Config file system access failed, using default config:', error);
+      // Continue with default config in memory
     }
   }
 
