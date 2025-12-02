@@ -147,9 +147,9 @@ const checkConfig = async (
 
     chatModelProviderId = chatModelProvider.id;
 
-    // Default to Think AI Standard (llama-3.3-70b) if available, otherwise first model
-    const defaultModel = chatModelProvider.chatModels.find((m) => m.key === 'llama-3.3-70b') 
-      ?? chatModelProvider.chatModels.find((m) => m.name.includes('Standard'))
+    // Default to Think AI Fast (mistral-31-24b) if available, otherwise first model
+    const defaultModel = chatModelProvider.chatModels.find((m) => m.key === 'mistral-31-24b') 
+      ?? chatModelProvider.chatModels.find((m) => m.name.includes('Fast'))
       ?? chatModelProvider.chatModels[0];
     
     const chatModel =
