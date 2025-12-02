@@ -13,6 +13,23 @@ import { ModelWithProvider } from '@/lib/models/types';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Global error handler wrapper
+const handleRouteError = (error: unknown, context: string): Response => {
+  console.error(`[${context}] Error:`, error);
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : undefined;
+  console.error(`[${context}] Error details:`, { errorMessage, errorStack });
+  
+  return Response.json(
+    {
+      type: 'error',
+      message: 'An error occurred while processing your request',
+      data: errorMessage,
+    },
+    { status: 500 },
+  );
+};
+
 const messageSchema = z.object({
   messageId: z.string().min(1, 'Message ID is required'),
   chatId: z.string().min(1, 'Chat ID is required'),
@@ -254,60 +271,95 @@ const handleHistorySave = async (
   focusMode: string,
   files: string[],
 ) => {
-  const chat = await db.query.chats.findFirst({
-    where: eq(chats.id, message.chatId),
-  });
+  try {
+    // Safely query database - handle mock database gracefully
+    let chat;
+    try {
+      chat = await db.query.chats.findFirst({
+        where: eq(chats.id, message.chatId),
+      });
+    } catch (queryError) {
+      console.warn('Error querying chat from DB (using mock?):', queryError);
+      chat = null;
+    }
 
-  const fileData = files.map(getFileDetails);
+    const fileData = files.map(getFileDetails);
 
-  if (!chat) {
-    await db
-      .insert(chats)
-      .values({
-        id: message.chatId,
-        title: message.content,
-        createdAt: new Date().toString(),
-        focusMode: focusMode,
-        files: fileData,
-      })
-      .execute();
-  } else if (JSON.stringify(chat.files ?? []) != JSON.stringify(fileData)) {
-    db.update(chats)
-      .set({
-        files: files.map(getFileDetails),
-      })
-      .where(eq(chats.id, message.chatId));
-  }
+    if (!chat) {
+      try {
+        await db
+          .insert(chats)
+          .values({
+            id: message.chatId,
+            title: message.content,
+            createdAt: new Date().toString(),
+            focusMode: focusMode,
+            files: fileData,
+          })
+          .execute();
+      } catch (insertError) {
+        console.warn('Error inserting chat to DB (using mock?):', insertError);
+      }
+    } else if (JSON.stringify(chat.files ?? []) != JSON.stringify(fileData)) {
+      try {
+        await db.update(chats)
+          .set({
+            files: files.map(getFileDetails),
+          })
+          .where(eq(chats.id, message.chatId))
+          .execute();
+      } catch (updateError) {
+        console.warn('Error updating chat in DB (using mock?):', updateError);
+      }
+    }
 
-  const messageExists = await db.query.messages.findFirst({
-    where: eq(messagesSchema.messageId, humanMessageId),
-  });
+    let messageExists;
+    try {
+      messageExists = await db.query.messages.findFirst({
+        where: eq(messagesSchema.messageId, humanMessageId),
+      });
+    } catch (queryError) {
+      console.warn('Error querying message from DB (using mock?):', queryError);
+      messageExists = null;
+    }
 
-  if (!messageExists) {
-    await db
-      .insert(messagesSchema)
-      .values({
-        content: message.content,
-        chatId: message.chatId,
-        messageId: humanMessageId,
-        role: 'user',
-        createdAt: new Date().toString(),
-      })
-      .execute();
-  } else {
-    await db
-      .delete(messagesSchema)
-      .where(
-        and(
-          gt(messagesSchema.id, messageExists.id),
-          eq(messagesSchema.chatId, message.chatId),
-        ),
-      )
-      .execute();
+    if (!messageExists) {
+      try {
+        await db
+          .insert(messagesSchema)
+          .values({
+            content: message.content,
+            chatId: message.chatId,
+            messageId: humanMessageId,
+            role: 'user',
+            createdAt: new Date().toString(),
+          })
+          .execute();
+      } catch (insertError) {
+        console.warn('Error inserting message to DB (using mock?):', insertError);
+      }
+    } else {
+      try {
+        await db
+          .delete(messagesSchema)
+          .where(
+            and(
+              gt(messagesSchema.id, messageExists.id),
+              eq(messagesSchema.chatId, message.chatId),
+            ),
+          )
+          .execute();
+      } catch (deleteError) {
+        console.warn('Error deleting messages from DB (using mock?):', deleteError);
+      }
+    }
+  } catch (error) {
+    // Don't throw - history save is non-critical
+    console.error('Error in handleHistorySave (non-critical):', error);
   }
 };
 
-export const POST = async (req: Request) => {
+const POSTHandler = async (req: Request): Promise<Response> => {
   try {
     let reqBody: any;
     try {
@@ -608,15 +660,22 @@ export const POST = async (req: Request) => {
       },
     });
   } catch (err) {
-    console.error('An error occurred while processing chat request:', err);
-    const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-    const errorStack = err instanceof Error ? err.stack : undefined;
-    console.error('Error details:', { errorMessage, errorStack });
+    return handleRouteError(err, 'POST /api/chat');
+  }
+};
+
+// Export with additional error boundary
+export const POST = async (req: Request): Promise<Response> => {
+  try {
+    return await POSTHandler(req);
+  } catch (outerError) {
+    // This catches any errors that escape the inner try-catch
+    console.error('Fatal error in POST handler:', outerError);
     return Response.json(
-      { 
+      {
         type: 'error',
-        message: 'An error occurred while processing chat request',
-        data: errorMessage,
+        message: 'A fatal error occurred',
+        data: outerError instanceof Error ? outerError.message : String(outerError),
       },
       { status: 500 },
     );
