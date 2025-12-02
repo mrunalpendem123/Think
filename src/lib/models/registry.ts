@@ -18,22 +18,33 @@ class ModelRegistry {
 
   private initializeActiveProviders() {
     const configuredProviders = getConfiguredModelProviders();
+    console.log('[ModelRegistry] Initializing providers. Count:', configuredProviders.length);
+    console.log('[ModelRegistry] Configured providers:', configuredProviders.map(p => ({ id: p.id, name: p.name, type: p.type, hasApiKey: !!p.config.apiKey, hasBaseURL: !!p.config.baseURL })));
 
     configuredProviders.forEach((p) => {
       try {
         const provider = providers[p.type];
-        if (!provider) throw new Error('Invalid provider type');
+        if (!provider) {
+          console.error(`[ModelRegistry] Invalid provider type: ${p.type}`);
+          throw new Error(`Invalid provider type: ${p.type}`);
+        }
 
+        console.log(`[ModelRegistry] Creating provider instance: ${p.type} (${p.name})`);
+        const instance = createProviderInstance(provider, p.id, p.name, p.config);
+        
         this.activeProviders.push({
           ...p,
-          provider: createProviderInstance(provider, p.id, p.name, p.config),
+          provider: instance,
         });
+        console.log(`[ModelRegistry] Provider initialized successfully: ${p.type} (${p.name})`);
       } catch (err) {
         console.error(
-          `Failed to initialize provider. Type: ${p.type}, ID: ${p.id}, Config: ${JSON.stringify(p.config)}, Error: ${err}`,
+          `[ModelRegistry] Failed to initialize provider. Type: ${p.type}, ID: ${p.id}, Name: ${p.name}, Config: ${JSON.stringify({ ...p.config, apiKey: p.config.apiKey ? '***' : 'MISSING' })}, Error: ${err}`,
         );
       }
     });
+    
+    console.log(`[ModelRegistry] Initialization complete. Active providers: ${this.activeProviders.length}`);
   }
 
   async getActiveProviders() {
