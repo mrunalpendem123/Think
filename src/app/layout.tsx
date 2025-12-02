@@ -10,6 +10,7 @@ import ThemeProvider from '@/components/theme/Provider';
 import configManager from '@/lib/config';
 import SetupWizard from '@/components/Setup/SetupWizard';
 import { ChatProvider } from '@/lib/hooks/useChat';
+import { cookies } from 'next/headers';
 
 const libreBaskerville = Libre_Baskerville({
   weight: ['400', '700'],
@@ -25,12 +26,15 @@ export const metadata: Metadata = {
     'Think Fast is an AI powered chatbot that is connected to the internet.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const setupComplete = configManager.isSetupComplete();
+  // Check cookie for setup completion (works on Vercel where filesystem is read-only)
+  const cookieStore = await cookies();
+  const setupCompleteCookie = cookieStore.get('setup-complete');
+  const setupComplete = setupCompleteCookie?.value === 'true' || configManager.isSetupComplete();
   const configSections = configManager.getUIConfigSections();
 
   return (

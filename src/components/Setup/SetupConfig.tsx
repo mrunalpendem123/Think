@@ -28,14 +28,26 @@ const SetupConfig = ({
     const fetchProviders = async () => {
       try {
         setIsLoading(true);
-        const res = await fetch('/api/providers');
-        if (!res.ok) throw new Error('Failed to fetch providers');
+        const res = await fetch('/api/providers', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!res.ok) {
+          const errorText = await res.text();
+          console.error('Failed to fetch providers:', res.status, errorText);
+          throw new Error(`Failed to fetch providers: ${res.status}`);
+        }
 
         const data = await res.json();
         setProviders(data.providers || []);
       } catch (error) {
         console.error('Error fetching providers:', error);
-        toast.error('Failed to load providers');
+        toast.error('Failed to load providers. Please refresh the page.');
+        // Set empty providers array so the UI can still render
+        setProviders([]);
       } finally {
         setIsLoading(false);
       }

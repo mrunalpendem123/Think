@@ -567,6 +567,8 @@ class ConfigManager {
   }
 
   public isSetupComplete() {
+    // Check cookie first (for Vercel where filesystem is read-only)
+    // This is checked in the layout component via cookies()
     return this.currentConfig.setupComplete;
   }
 
@@ -575,7 +577,14 @@ class ConfigManager {
       this.currentConfig.setupComplete = true;
     }
 
+    // On Vercel, filesystem is read-only, so saveConfig will fail silently
+    // But we can still mark as complete in memory
     this.saveConfig();
+    
+    // Also set an environment variable flag for Vercel
+    if (process.env.VERCEL) {
+      process.env.SETUP_COMPLETE = 'true';
+    }
   }
 
   public getUIConfigSections(): UIConfigSections {
