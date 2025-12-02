@@ -588,27 +588,44 @@ const POSTHandler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const responseStream = new TransformStream();
-    const writer = responseStream.writable.getWriter();
-    const encoder = new TextEncoder();
+    let responseStream: TransformStream;
+    let writer: WritableStreamDefaultWriter;
+    let encoder: TextEncoder;
+    let timeoutId: NodeJS.Timeout;
 
-    // Set a timeout to ensure we send something if stream doesn't emit
-    const timeoutId = setTimeout(() => {
-      console.warn('Stream timeout - no data received after 60 seconds');
-      try {
-        writer.write(
-          encoder.encode(
-            JSON.stringify({
-              type: 'error',
-              data: 'Request timed out. The AI is taking longer than expected. Please try again.',
-            }) + '\n',
-          ),
-        );
-        writer.close();
-      } catch (error) {
-        console.error('Error writing timeout error:', error);
-      }
-    }, 60000);
+    try {
+      responseStream = new TransformStream();
+      writer = responseStream.writable.getWriter();
+      encoder = new TextEncoder();
+
+      // Set a timeout to ensure we send something if stream doesn't emit
+      timeoutId = setTimeout(() => {
+        console.warn('Stream timeout - no data received after 60 seconds');
+        try {
+          writer.write(
+            encoder.encode(
+              JSON.stringify({
+                type: 'error',
+                data: 'Request timed out. The AI is taking longer than expected. Please try again.',
+              }) + '\n',
+            ),
+          );
+          writer.close();
+        } catch (error) {
+          console.error('Error writing timeout error:', error);
+        }
+      }, 60000);
+    } catch (streamInitError) {
+      console.error('Error initializing response stream:', streamInitError);
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Failed to initialize response stream',
+          data: streamInitError instanceof Error ? streamInitError.message : String(streamInitError),
+        },
+        { status: 500 },
+      );
+    }
 
     // Note: Don't send empty message - let the stream handle first message
     // This ensures proper message ID assignment
