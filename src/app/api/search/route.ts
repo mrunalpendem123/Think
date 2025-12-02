@@ -90,7 +90,7 @@ export const POST = async (req: Request) => {
       if (errorDetails.includes('Invalid provider')) {
         return Response.json(
           {
-            message: `Model provider not found. Please ensure your AI provider is properly configured.`,
+            message: 'Model provider not found. Please ensure your AI provider is properly configured.',
           },
           { status: 500 },
         );
@@ -108,7 +108,10 @@ export const POST = async (req: Request) => {
 
     if (!searchHandler) {
       console.error('Invalid focus mode:', body.focusMode);
-      return Response.json({ message: 'Invalid focus mode' }, { status: 400 });
+      return Response.json(
+        { message: `Invalid focus mode: ${body.focusMode}` },
+        { status: 400 },
+      );
     }
 
     let emitter;
@@ -123,10 +126,10 @@ export const POST = async (req: Request) => {
         body.systemInstructions || '',
       );
     } catch (searchError) {
-      console.error('Error in searchHandler.searchAndAnswer:', searchError);
+      console.error('Error in searchAndAnswer:', searchError);
       const errorDetails = searchError instanceof Error ? searchError.message : String(searchError);
       const errorStack = searchError instanceof Error ? searchError.stack : undefined;
-      console.error('Search handler error details:', { errorDetails, errorStack });
+      console.error('Search error details:', { errorDetails, errorStack });
       return Response.json(
         {
           message: `Search failed: ${errorDetails}`,
@@ -267,12 +270,12 @@ export const POST = async (req: Request) => {
       },
     });
   } catch (err: any) {
-    console.error('Error in search API route:', err);
+    console.error('Error in search route:', err);
     const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
     const errorStack = err instanceof Error ? err.stack : undefined;
-    console.error('Search API error details:', { errorMessage, errorStack });
+    console.error('Search route error details:', { errorMessage, errorStack });
     return Response.json(
-      { 
+      {
         message: 'An error occurred while processing search request',
         error: errorMessage,
       },
