@@ -420,6 +420,11 @@ const POSTHandler = async (req: Request): Promise<Response> => {
     const body = parseBody.data as Body;
     const { message } = body;
 
+    // Ensure optimizationMode has a default value
+    if (!body.optimizationMode) {
+      body.optimizationMode = 'speed';
+    }
+
     // Validate message exists and has content
     if (!message || !message.content || message.content.trim() === '') {
       return Response.json(
