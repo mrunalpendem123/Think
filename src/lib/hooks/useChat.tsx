@@ -899,6 +899,12 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       const reader = res.body?.getReader();
+      if (!reader) {
+        toast.error('Failed to get response reader');
+        setLoading(false);
+        return;
+      }
+      
       const decoder = new TextDecoder('utf-8');
 
       let partialChunk = '';
