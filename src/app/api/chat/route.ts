@@ -148,7 +148,7 @@ const handleEmitterEvents = async (
               createdAt: new Date().toString(),
             })
             .execute()
-            .catch((dbError) => {
+            .catch((dbError: any) => {
               console.error('Error saving sources to DB:', dbError);
             });
         } catch (writeError) {
@@ -179,7 +179,7 @@ const handleEmitterEvents = async (
               createdAt: new Date().toString(),
             })
             .execute()
-            .catch((dbError) => {
+            .catch((dbError: any) => {
               console.error('Error saving template to DB:', dbError);
             });
         } catch (writeError) {
@@ -213,7 +213,7 @@ const handleEmitterEvents = async (
           createdAt: new Date().toString(),
         })
         .execute()
-        .catch((dbError) => {
+        .catch((dbError: any) => {
           console.error('Error saving assistant message to DB:', dbError);
         });
     } catch (error) {
