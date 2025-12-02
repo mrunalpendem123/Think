@@ -132,8 +132,11 @@ const checkConfig = async (
       );
     }
 
+    // Prefer Think AI (Venice) provider if available
+    const thinkAIProvider = providers.find((p) => p.name === 'Think AI' && p.chatModels.length > 0);
     const chatModelProvider =
       providers.find((p) => p.id === chatModelProviderId) ??
+      thinkAIProvider ??
       providers.find((p) => p.chatModels.length > 0);
 
     if (!chatModelProvider) {
@@ -144,13 +147,21 @@ const checkConfig = async (
 
     chatModelProviderId = chatModelProvider.id;
 
+    // Default to Think AI Standard (llama-3.3-70b) if available, otherwise first model
+    const defaultModel = chatModelProvider.chatModels.find((m) => m.key === 'llama-3.3-70b') 
+      ?? chatModelProvider.chatModels.find((m) => m.name.includes('Standard'))
+      ?? chatModelProvider.chatModels[0];
+    
     const chatModel =
       chatModelProvider.chatModels.find((m) => m.key === chatModelKey) ??
-      chatModelProvider.chatModels[0];
+      defaultModel;
     chatModelKey = chatModel.key;
 
+    // Prefer Think AI (Venice) provider for embeddings if available
+    const thinkAIEmbeddingProvider = providers.find((p) => p.name === 'Think AI' && p.embeddingModels.length > 0);
     const embeddingModelProvider =
       providers.find((p) => p.id === embeddingModelProviderId) ??
+      thinkAIEmbeddingProvider ??
       providers.find((p) => p.embeddingModels.length > 0);
 
     if (!embeddingModelProvider) {
@@ -161,10 +172,15 @@ const checkConfig = async (
 
     embeddingModelProviderId = embeddingModelProvider.id;
 
+    // Default to Think AI Text Embedding 3 Small if available, otherwise first model
+    const defaultEmbeddingModel = embeddingModelProvider.embeddingModels.find((m) => m.key === 'text-embedding-3-small')
+      ?? embeddingModelProvider.embeddingModels.find((m) => m.name.includes('Small'))
+      ?? embeddingModelProvider.embeddingModels[0];
+    
     const embeddingModel =
       embeddingModelProvider.embeddingModels.find(
         (m) => m.key === embeddingModelKey,
-      ) ?? embeddingModelProvider.embeddingModels[0];
+      ) ?? defaultEmbeddingModel;
     embeddingModelKey = embeddingModel.key;
 
     localStorage.setItem('chatModelKey', chatModelKey);

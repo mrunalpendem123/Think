@@ -313,6 +313,7 @@ export const POST = async (req: Request) => {
 
     const parseBody = safeValidateBody(reqBody);
     if (!parseBody.success) {
+      console.error('Invalid request body:', parseBody.error);
       return Response.json(
         { message: 'Invalid request body', error: parseBody.error },
         { status: 400 },
@@ -331,15 +332,39 @@ export const POST = async (req: Request) => {
       );
     }
 
-    const registry = new ModelRegistry();
+    let registry: ModelRegistry;
+    try {
+      registry = new ModelRegistry();
+    } catch (registryError) {
+      console.error('Error creating ModelRegistry:', registryError);
+      return Response.json(
+        {
+          type: 'error',
+          data: `Failed to initialize model registry: ${registryError instanceof Error ? registryError.message : 'Unknown error'}`,
+        },
+        { status: 500 },
+      );
+    }
 
-    const [llm, embedding] = await Promise.all([
-      registry.loadChatModel(body.chatModel.providerId, body.chatModel.key),
-      registry.loadEmbeddingModel(
-        body.embeddingModel.providerId,
-        body.embeddingModel.key,
-      ),
-    ]);
+    let llm, embedding;
+    try {
+      [llm, embedding] = await Promise.all([
+        registry.loadChatModel(body.chatModel.providerId, body.chatModel.key),
+        registry.loadEmbeddingModel(
+          body.embeddingModel.providerId,
+          body.embeddingModel.key,
+        ),
+      ]);
+    } catch (modelError) {
+      console.error('Error loading models:', modelError);
+      return Response.json(
+        {
+          type: 'error',
+          data: `Failed to load models: ${modelError instanceof Error ? modelError.message : 'Unknown error'}`,
+        },
+        { status: 500 },
+      );
+    }
 
     const humanMessageId =
       message.messageId ?? crypto.randomBytes(7).toString('hex');
@@ -439,7 +464,7 @@ export const POST = async (req: Request) => {
 
     // Don't await handleHistorySave - let it run in background
     handleHistorySave(message, humanMessageId, body.focusMode, body.files).catch(
-      (error) => {
+      (error: any) => {
         console.error('Error saving history:', error);
       },
     );
@@ -453,8 +478,15 @@ export const POST = async (req: Request) => {
     });
   } catch (err) {
     console.error('An error occurred while processing chat request:', err);
+    const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+    const errorStack = err instanceof Error ? err.stack : undefined;
+    console.error('Error details:', { errorMessage, errorStack });
     return Response.json(
-      { message: 'An error occurred while processing chat request' },
+      { 
+        type: 'error',
+        message: 'An error occurred while processing chat request',
+        data: errorMessage,
+      },
       { status: 500 },
     );
   }
