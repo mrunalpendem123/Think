@@ -58,10 +58,12 @@ const Sidebar = ({ children }: { children: React.ReactNode }) => {
           <Link
             className="p-2.5 rounded-full bg-light-200 text-black/70 dark:bg-dark-200 dark:text-white/70 hover:opacity-70 hover:scale-105 transition duration-200"
             href="/"
-            onClick={() => {
+            onClick={(e) => {
               // Clear any stored chat state when starting new chat
               if (typeof window !== 'undefined') {
                 localStorage.removeItem('currentChatId');
+                // Force navigation to home page
+                window.location.href = '/';
               }
             }}
           >

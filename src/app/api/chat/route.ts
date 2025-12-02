@@ -335,12 +335,26 @@ export const POST = async (req: Request) => {
     let registry: ModelRegistry;
     try {
       registry = new ModelRegistry();
+      // Verify we have at least one provider configured
+      if (registry.activeProviders.length === 0) {
+        console.error('No active providers found in ModelRegistry');
+        return Response.json(
+          {
+            type: 'error',
+            data: 'No AI model providers are configured. Please configure a provider in settings.',
+          },
+          { status: 500 },
+        );
+      }
     } catch (registryError) {
       console.error('Error creating ModelRegistry:', registryError);
+      const errorDetails = registryError instanceof Error ? registryError.message : String(registryError);
+      const errorStack = registryError instanceof Error ? registryError.stack : undefined;
+      console.error('Registry error details:', { errorDetails, errorStack });
       return Response.json(
         {
           type: 'error',
-          data: `Failed to initialize model registry: ${registryError instanceof Error ? registryError.message : 'Unknown error'}`,
+          data: `Failed to initialize model registry: ${errorDetails}`,
         },
         { status: 500 },
       );
@@ -348,6 +362,13 @@ export const POST = async (req: Request) => {
 
     let llm, embedding;
     try {
+      console.log('Loading models:', {
+        chatProviderId: body.chatModel.providerId,
+        chatModelKey: body.chatModel.key,
+        embeddingProviderId: body.embeddingModel.providerId,
+        embeddingModelKey: body.embeddingModel.key,
+      });
+      
       [llm, embedding] = await Promise.all([
         registry.loadChatModel(body.chatModel.providerId, body.chatModel.key),
         registry.loadEmbeddingModel(
@@ -355,12 +376,29 @@ export const POST = async (req: Request) => {
           body.embeddingModel.key,
         ),
       ]);
+      
+      console.log('Models loaded successfully');
     } catch (modelError) {
       console.error('Error loading models:', modelError);
+      const errorDetails = modelError instanceof Error ? modelError.message : String(modelError);
+      const errorStack = modelError instanceof Error ? modelError.stack : undefined;
+      console.error('Model loading error details:', { errorDetails, errorStack });
+      
+      // Check if it's a provider not found error
+      if (errorDetails.includes('Invalid provider')) {
+        return Response.json(
+          {
+            type: 'error',
+            data: `Model provider not found. Please ensure your AI provider is properly configured.`,
+          },
+          { status: 500 },
+        );
+      }
+      
       return Response.json(
         {
           type: 'error',
-          data: `Failed to load models: ${modelError instanceof Error ? modelError.message : 'Unknown error'}`,
+          data: `Failed to load models: ${errorDetails}`,
         },
         { status: 500 },
       );

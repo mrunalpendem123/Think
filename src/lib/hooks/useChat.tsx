@@ -528,9 +528,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
         setFiles,
         setFileIds,
       );
-    } else if (!chatId) {
+    } else if (!chatId && !params.chatId) {
+      // Only create new chat if we're on home page (no chatId in URL)
       setNewChatCreated(true);
       setIsMessagesLoaded(true);
+      setMessages([]);
+      setChatHistory([]);
+      setFiles([]);
+      setFileIds([]);
       setChatId(randomHex(40));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
