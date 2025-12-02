@@ -17,6 +17,26 @@ const nextConfig = {
     '@img/sharp-libvips-linux-x64',
     'better-sqlite3',
   ],
+  experimental: {
+    outputFileTracingExcludes: {
+      '*': [
+        'node_modules/onnxruntime-node/**',
+        'node_modules/@img/sharp-libvips-linuxmusl-x64/**',
+        'node_modules/@img/sharp-libvips-linux-x64/**',
+        'node_modules/@img/sharp-libvips-darwin-arm64/**',
+        'node_modules/@img/sharp-libvips-darwin-x64/**',
+        'node_modules/@img/sharp-libvips-win32-x64/**',
+        'node_modules/@img/sharp-darwin-arm64/**',
+        'node_modules/@img/sharp-darwin-x64/**',
+        'node_modules/@img/sharp-linux-arm64/**',
+        'node_modules/@img/sharp-linux-x64/**',
+        'node_modules/@img/sharp-win32-x64/**',
+        'node_modules/sharp/**',
+        'node_modules/@huggingface/transformers/**',
+        'node_modules/better-sqlite3/**',
+      ],
+    },
+  },
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Exclude large native dependencies from server bundle
