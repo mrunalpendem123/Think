@@ -861,36 +861,70 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('📤 Full message being sent to AI:', messageWithContext);
     }
 
+    // Validate model configuration before sending request
+    if (!chatModelProvider.key || !chatModelProvider.providerId) {
+      console.error('Chat model not configured:', { chatModelProvider });
+      toast.error('Chat model is not configured. Please select a model in settings.');
+      setLoading(false);
+      return;
+    }
+
+    if (!embeddingModelProvider.key || !embeddingModelProvider.providerId) {
+      console.error('Embedding model not configured:', { embeddingModelProvider });
+      toast.error('Embedding model is not configured. Please select a model in settings.');
+      setLoading(false);
+      return;
+    }
+
+    if (!chatId) {
+      console.error('Chat ID is missing');
+      toast.error('Chat ID is missing. Please try again.');
+      setLoading(false);
+      return;
+    }
+
     try {
+      const requestBody = {
+        content: messageWithContext,
+        message: {
+          messageId: messageId,
+          chatId: chatId,
+          content: message, // Store original message without context
+        },
+        chatId: chatId,
+        files: fileIds || [],
+        focusMode: focusMode || 'webSearch',
+        optimizationMode: optimizationMode || 'speed',
+        history: rewrite
+          ? chatHistory.slice(0, messageIndex === -1 ? undefined : messageIndex)
+          : chatHistory || [],
+        chatModel: {
+          key: chatModelProvider.key,
+          providerId: chatModelProvider.providerId,
+        },
+        embeddingModel: {
+          key: embeddingModelProvider.key,
+          providerId: embeddingModelProvider.providerId,
+        },
+        systemInstructions: localStorage.getItem('systemInstructions') || '',
+      };
+
+      console.log('[sendMessage] Sending request with:', {
+        messageId,
+        chatId,
+        focusMode: requestBody.focusMode,
+        chatModel: requestBody.chatModel,
+        embeddingModel: requestBody.embeddingModel,
+        filesCount: requestBody.files.length,
+        historyLength: requestBody.history.length,
+      });
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          content: messageWithContext,
-          message: {
-            messageId: messageId,
-            chatId: chatId!,
-            content: message, // Store original message without context
-          },
-          chatId: chatId!,
-          files: fileIds || [],
-          focusMode: focusMode || 'webSearch',
-          optimizationMode: optimizationMode || 'speed',
-          history: rewrite
-            ? chatHistory.slice(0, messageIndex === -1 ? undefined : messageIndex)
-            : chatHistory || [],
-          chatModel: {
-            key: chatModelProvider.key || '',
-            providerId: chatModelProvider.providerId || '',
-          },
-          embeddingModel: {
-            key: embeddingModelProvider.key || '',
-            providerId: embeddingModelProvider.providerId || '',
-          },
-          systemInstructions: localStorage.getItem('systemInstructions') || '',
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!res.ok) {
