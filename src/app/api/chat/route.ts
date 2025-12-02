@@ -716,6 +716,18 @@ const POSTHandler = async (req: Request): Promise<Response> => {
       },
     );
 
+    // Ensure responseStream is defined before returning
+    if (!responseStream || !responseStream.readable) {
+      console.error('Response stream is invalid');
+      return Response.json(
+        {
+          type: 'error',
+          message: 'Failed to create response stream',
+        },
+        { status: 500 },
+      );
+    }
+
     return new Response(responseStream.readable, {
       headers: {
         'Content-Type': 'text/event-stream',
