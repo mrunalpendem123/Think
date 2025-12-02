@@ -21,9 +21,9 @@ const libreBaskerville = Libre_Baskerville({
 });
 
 export const metadata: Metadata = {
-  title: 'Think Fast - Chat with the internet',
+  title: 'Think AI - Powered by Venice',
   description:
-    'Think Fast is an AI powered chatbot that is connected to the internet.',
+    'Think AI is an AI powered chatbot that is connected to the internet, powered by Venice.ai',
 };
 
 export default async function RootLayout({

@@ -269,10 +269,17 @@ class ConfigManager {
       };
 
       provider.fields.forEach((field) => {
-        newProvider.config[field.key] =
-          process.env[field.env!] ||
-          field.default ||
-          ''; /* Env var must exist for providers */
+        // Auto-configure Venice AI with hardcoded API key
+        if (provider.key === 'venice' && field.key === 'apiKey') {
+          newProvider.config[field.key] = process.env[field.env!] || '5veQ8IP7eF-x9xvpn-XK0vQPvRC3L8QoyDW-q8o1pX';
+        } else if (provider.key === 'venice' && field.key === 'baseURL') {
+          newProvider.config[field.key] = process.env[field.env!] || field.default || 'https://api.venice.ai/api/v1';
+        } else {
+          newProvider.config[field.key] =
+            process.env[field.env!] ||
+            field.default ||
+            ''; /* Env var must exist for providers */
+        }
 
         if (field.required) newProvider.required?.push(field.key);
       });
@@ -285,7 +292,8 @@ class ConfigManager {
         }
       });
 
-      if (configured) {
+      // For Venice, always consider it configured since we auto-set the API key
+      if (configured || (provider.key === 'venice' && newProvider.config.apiKey)) {
         const hash = hashObj(newProvider.config);
         newProvider.hash = hash;
         delete newProvider.required;
@@ -422,18 +430,20 @@ class ConfigManager {
       }
     });
 
-    // Auto-mark setup as complete if Venice AI and Parallel AI are configured
+    // Auto-mark setup as complete if Venice AI is configured (Venice is always auto-configured)
+    // Also check if Venice was just added in this initialization
     const hasVeniceAI = this.currentConfig.modelProviders.some(
-      (p) => p.type === 'venice' && p.chatModels.length > 0,
+      (p) => p.type === 'venice' && p.config.apiKey && p.chatModels.length > 0,
     );
-    const hasParallelAI = !!(
-      this.currentConfig.search.parallelAPIKey ||
-      process.env.PARALLEL_API_KEY
-    );
-
-    if (hasVeniceAI && hasParallelAI && !this.currentConfig.setupComplete) {
+    
+    // If Venice AI is configured but setup is not complete, mark it complete
+    if (hasVeniceAI && !this.currentConfig.setupComplete) {
       this.currentConfig.setupComplete = true;
-      console.log('Auto-configuration complete: Venice AI and Parallel AI are configured');
+      console.log('Auto-configuration complete: Venice AI is configured');
+      // Set cookie for Vercel compatibility
+      if (typeof process !== 'undefined' && process.env.VERCEL) {
+        // Cookie will be set by the API route when setup completes
+      }
     }
 
     this.saveConfig();

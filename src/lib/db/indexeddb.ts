@@ -180,9 +180,21 @@ export const saveMessage = async (message: Message | any): Promise<void> => {
     const store = transaction.objectStore(MESSAGES_STORE);
     
     // Convert createdAt Date to ISO string for storage
+    // Handle both Date objects and ISO strings
+    let createdAtString: string;
+    if (message.createdAt instanceof Date) {
+      createdAtString = message.createdAt.toISOString();
+    } else if (typeof message.createdAt === 'string') {
+      // Already a string, use it directly
+      createdAtString = message.createdAt;
+    } else {
+      // Fallback to current time
+      createdAtString = new Date().toISOString();
+    }
+    
     const messageToSave: any = {
       ...message,
-      createdAt: (message.createdAt as unknown as Date).toISOString(),
+      createdAt: createdAtString,
     };
     
     // Check if message with same messageId exists

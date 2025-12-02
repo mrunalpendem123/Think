@@ -212,11 +212,22 @@ const loadMessages = async (
 
     const messages = await getMessages(chatId);
     
-    // Convert createdAt strings to Date objects
-    const convertedMessages = messages.map((msg) => ({
-      ...msg,
-      createdAt: new Date(msg.createdAt),
-    })) as unknown as Message[];
+    // Convert createdAt strings to Date objects, handling both string and Date types
+    const convertedMessages = messages.map((msg: any) => {
+      let createdAt: Date;
+      if (msg.createdAt instanceof Date) {
+        createdAt = msg.createdAt;
+      } else if (typeof msg.createdAt === 'string') {
+        createdAt = new Date(msg.createdAt);
+      } else {
+        createdAt = new Date();
+      }
+      
+      return {
+        ...msg,
+        createdAt,
+      };
+    }) as unknown as Message[];
 
     setMessages(convertedMessages);
 
