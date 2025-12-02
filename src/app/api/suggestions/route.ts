@@ -113,7 +113,7 @@ export const POST = async (req: Request): Promise<Response> => {
     // Convert chat history to LangChain messages
     let chatHistory: BaseMessage[];
     try {
-      chatHistory = body.chatHistory
+      const mappedMessages = body.chatHistory
         .map((msg: any) => {
           if (!msg.content || typeof msg.content !== 'string') {
             return null;
@@ -124,8 +124,9 @@ export const POST = async (req: Request): Promise<Response> => {
             return new AIMessage(msg.content);
           }
           return null;
-        })
-        .filter((msg): msg is BaseMessage => msg !== null);
+        });
+      
+      chatHistory = mappedMessages.filter((msg): msg is BaseMessage => msg !== null);
       
       if (chatHistory.length === 0) {
         return Response.json(
