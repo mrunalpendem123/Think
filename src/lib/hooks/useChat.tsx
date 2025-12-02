@@ -368,6 +368,9 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
   const messagesRef = useRef<Message[]>([]);
 
   const chatTurns = useMemo((): ChatTurn[] => {
+    if (!Array.isArray(messages)) {
+      return [];
+    }
     return messages.filter(
       (msg): msg is ChatTurn => msg.role === 'user' || msg.role === 'assistant',
     );
