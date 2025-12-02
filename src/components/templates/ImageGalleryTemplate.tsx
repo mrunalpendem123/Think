@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import Lightbox from 'yet-another-react-lightbox';
-import 'yet-another-react-lightbox/styles.css';
+import React from 'react';
+import SearchImages from '../SearchImages';
 
 interface ImageResult {
   url: string;
@@ -19,12 +18,11 @@ const ImageGalleryTemplate: React.FC<ImageGalleryTemplateProps> = ({
   images,
   query,
 }) => {
-  const [open, setOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const slides = images.map((img) => ({
-    src: img.url,
-    alt: img.title,
+  // Convert to format expected by SearchImages component
+  const formattedImages = images.map((img) => ({
+    img_src: img.thumbnail || img.url,
+    url: img.url,
+    title: img.title,
   }));
 
   return (
@@ -34,30 +32,9 @@ const ImageGalleryTemplate: React.FC<ImageGalleryTemplateProps> = ({
           Images: {query}
         </h3>
       )}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {images.map((img, index) => (
-          <div
-            key={index}
-            className="relative aspect-square cursor-pointer overflow-hidden rounded-lg hover:opacity-80 transition-opacity"
-            onClick={() => {
-              setSelectedIndex(index);
-              setOpen(true);
-            }}
-          >
-            <img
-              src={img.thumbnail || img.url}
-              alt={img.title}
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-          </div>
-        ))}
-      </div>
-      <Lightbox
-        open={open}
-        close={() => setOpen(false)}
-        slides={slides}
-        index={selectedIndex}
+      <SearchImages
+        images={formattedImages}
+        query={query || ''}
       />
     </div>
   );

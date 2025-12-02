@@ -1,10 +1,14 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
 import Database from 'better-sqlite3';
-import * as schema from './schema';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
 import path from 'path';
+import * as schema from './schema';
 
 const DATA_DIR = process.env.DATA_DIR || process.cwd();
-const dbPath = path.join(DATA_DIR, './data/db.sqlite');
+let dbPath = path.join(DATA_DIR, './data/db.sqlite');
+
+if (process.env.VERCEL) {
+  dbPath = path.join('/tmp', 'db.sqlite');
+}
 
 // Ensure data directory exists
 import fs from 'fs';

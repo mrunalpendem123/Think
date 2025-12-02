@@ -1,5 +1,4 @@
 import {
-  PasswordUIConfigField,
   SelectUIConfigField,
   StringUIConfigField,
   SwitchUIConfigField,

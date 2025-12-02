@@ -26,74 +26,74 @@ export const templates: ResponseTemplate[] = [
   // Basic content templates
   {
     name: 'standard_message',
-    Component: StandardMessageTemplate,
+    component: StandardMessageTemplate,
   },
   {
     name: 'weather',
-    Component: WeatherTemplate,
+    component: WeatherTemplate,
   },
   {
     name: 'news',
-    Component: NewsTemplate,
+    component: NewsTemplate,
   },
   {
     name: 'sources',
-    Component: SourcesTemplate,
+    component: SourcesTemplate,
   },
   {
     name: 'thinking',
-    Component: ThinkingTemplate,
+    component: ThinkingTemplate,
   },
   {
     name: 'images',
-    Component: ImageGalleryTemplate,
+    component: ImageGalleryTemplate,
   },
   {
     name: 'videos',
-    Component: VideoResultsTemplate,
+    component: VideoResultsTemplate,
   },
   {
     name: 'search_results',
-    Component: SearchResultsTemplate,
+    component: SearchResultsTemplate,
   },
   // Data visualization templates
   {
     name: 'chart',
-    Component: ChartTemplate,
+    component: ChartTemplate,
   },
   {
     name: 'multi_chart',
-    Component: MultiChartTemplate,
+    component: MultiChartTemplate,
   },
   {
     name: 'data_table',
-    Component: DataTableTemplate,
+    component: DataTableTemplate,
   },
   // Interactive form templates
   {
     name: 'form',
-    Component: FormTemplate,
+    component: FormTemplate,
   },
   {
     name: 'survey',
-    Component: SurveyTemplate,
+    component: SurveyTemplate,
   },
   // Interactive widget templates
   {
     name: 'calculator',
-    Component: CalculatorTemplate,
+    component: CalculatorTemplate,
   },
   {
     name: 'comparison',
-    Component: ComparisonTemplate,
+    component: ComparisonTemplate,
   },
   {
     name: 'timeline',
-    Component: TimelineTemplate,
+    component: TimelineTemplate,
   },
   {
     name: 'card_grid',
-    Component: CardGridTemplate,
+    component: CardGridTemplate,
   },
 ];
 

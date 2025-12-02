@@ -209,46 +209,11 @@ const loadMessages = async (
       return;
     }
 
-    const dbMessages = await getMessages(chatId);
-    
-    // Convert IndexedDB Message format to ChatWindow Message format
-    const convertedMessages: Message[] = dbMessages.map((dbMsg) => {
-      const base = {
-        chatId: dbMsg.chatId,
-        messageId: dbMsg.messageId,
-        createdAt: new Date(dbMsg.createdAt),
-      };
-      
-      if (dbMsg.role === 'user') {
-        return {
-          ...base,
-          role: 'user' as const,
-          content: dbMsg.content || '',
-        } as UserMessage;
-      } else if (dbMsg.role === 'assistant') {
-        return {
-          ...base,
-          role: 'assistant' as const,
-          content: dbMsg.content || '',
-        } as AssistantMessage;
-      } else if (dbMsg.role === 'source') {
-        return {
-          ...base,
-          role: 'source' as const,
-          sources: dbMsg.sources || [],
-        } as SourceMessage;
-      }
-      // Fallback - shouldn't happen
-      return {
-        ...base,
-        role: 'assistant' as const,
-        content: dbMsg.content || '',
-      } as AssistantMessage;
-    });
+    const messages = await getMessages(chatId);
 
-    setMessages(convertedMessages);
+    setMessages(messages as Message[]);
 
-    const chatTurns = convertedMessages.filter(
+    const chatTurns = messages.filter(
       (msg): msg is ChatTurn => msg.role === 'user' || msg.role === 'assistant',
     );
 
@@ -650,30 +615,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
 
     const messageHandler = async (data: any) => {
       if (data.type === 'error') {
-        const errorMessage = data.data || 'An error occurred while processing your request';
-        toast.error(errorMessage);
-        
-        // Add error message to messages so it shows in UI
-        const errorMessageId = randomHex(14);
-        await saveMessage({
-          messageId: errorMessageId,
-          chatId: chatId!,
-          role: 'assistant',
-          content: `Error: ${errorMessage}`,
-          createdAt: new Date().toISOString(),
-        });
-
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            messageId: errorMessageId,
-            chatId: chatId!,
-            role: 'assistant',
-            content: `Error: ${errorMessage}`,
-            createdAt: new Date(),
-          },
-        ]);
-        
+        toast.error(data.data);
         setLoading(false);
         return;
       }
@@ -698,7 +640,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
             createdAt: new Date(),
           },
         ]);
-        if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        if (data.data.length > 0) {
           setMessageAppeared(true);
         }
       }
@@ -734,7 +676,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
           setMessages((prevMessages) => [
             ...prevMessages,
             {
-              content: data.data || '',
+              content: data.data,
               messageId: data.messageId,
               chatId: chatId!,
               role: 'assistant',
@@ -750,14 +692,14 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
                 message.messageId === data.messageId &&
                 message.role === 'assistant'
               ) {
-                return { ...message, content: (message.content || '') + (data.data || '') };
+                return { ...message, content: message.content + data.data };
               }
 
               return message;
             }),
           );
         }
-        recievedMessage += data.data || '';
+        recievedMessage += data.data;
       }
 
       if (data.type === 'messageEnd') {
@@ -919,34 +861,7 @@ export const ChatProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error: any) {
       console.error('Error sending message:', error);
-      const errorMessage = error.message || 'Failed to send message. Please try again.';
-      toast.error(errorMessage);
-      
-      // Add error message to UI
-      const errorMessageId = randomHex(14);
-      try {
-        await saveMessage({
-          messageId: errorMessageId,
-          chatId: chatId!,
-          role: 'assistant',
-          content: `Error: ${errorMessage}`,
-          createdAt: new Date().toISOString(),
-        });
-
-        setMessages((prevMessages) => [
-          ...prevMessages,
-          {
-            messageId: errorMessageId,
-            chatId: chatId!,
-            role: 'assistant',
-            content: `Error: ${errorMessage}`,
-            createdAt: new Date(),
-          },
-        ]);
-      } catch (saveError) {
-        console.error('Error saving error message:', saveError);
-      }
-      
+      toast.error(error.message || 'Failed to send message. Please try again.');
       setLoading(false);
     }
   };
