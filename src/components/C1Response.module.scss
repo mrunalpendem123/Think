@@ -1,0 +1,46 @@
+.c1Container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  overflow-y: auto;
+  background-color: var(--container-fill, transparent);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  :global(.c1-think-container) {
+    :global(.crayon-step-title) {
+      opacity: 0.6;
+      font-size: 16px !important;
+    }
+
+    :global(.crayon-step-details) {
+      font-size: 14px !important;
+    }
+  }
+
+  :global(.crayon-follow-up-item) {
+    text-align: left;
+  }
+
+  :global(.crayon-card) {
+    background-color: var(--container-fill, #ffffff);
+    border: 1px solid var(--border-default, rgba(0, 0, 0, 0.06));
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  :global(.crayon-header) {
+    margin-bottom: 16px;
+  }
+}
+
+
+
+
+

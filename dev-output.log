@@ -1,0 +1,820 @@
+
+> private-search-ai@0.1.0 dev
+> next dev --turbo
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/mrunalpendem/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /Users/mrunalpendem/Desktop/think/package-lock.json
+
+ ⚠ Port 3000 is in use by process 58564, using available port 3002 instead.
+   ▲ Next.js 15.5.6 (Turbopack)
+   - Local:        http://localhost:3002
+   - Network:      http://192.168.1.7:3002
+   - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Compiled middleware in 127ms
+ ✓ Ready in 1275ms
+ ⚠ Webpack is configured while Turbopack is not, which may cause problems.
+ ⚠ See instructions if you need to configure Turbopack:
+  https://nextjs.org/docs/app/api-reference/next-config-js/turbopack
+
+ ○ Compiling / ...
+ ✓ Compiled / in 11.8s
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Lit is in dev mode. Not recommended for production! See https://lit.dev/msg/dev-mode for more information.
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 13509ms
+[Reown Config] Failed to fetch remote project configuration. Using local/default values. Error: HTTP status code: 403
+    at fetchData (../../../../src/utils/FetchUtil.ts:23:17)
+    at async FetchUtil.get (../../../../src/utils/FetchUtil.ts:44:22)
+    at async Object.fetchProjectConfig (../../../../src/controllers/ApiController.ts:158:22)
+    at async Object.fetchRemoteFeatures (../../../../src/utils/ConfigUtil.ts:233:26)
+    at async AppKit.initialize (../../../../src/client/appkit-base-client.ts:165:27) {
+  [cause]: Response {
+    status: 403,
+    statusText: 'Forbidden',
+    headers: Headers {
+      date: 'Sun, 02 Nov 2025 19:38:25 GMT',
+      'content-type': 'text/plain; charset=UTF-8',
+      'content-length': '9',
+      connection: 'keep-alive',
+      'cf-ray': '9986178d5a9274f4-MAA',
+      'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      vary: 'Accept-Encoding',
+      server: 'cloudflare',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    body: undefined,
+    bodyUsed: false,
+    ok: false,
+    redirected: false,
+    type: 'default',
+    url: 'https://api.web3modal.org/appkit/v1/config?projectId=c1c3518641e82c96d2b1d3f8e8e07b51&st=appkit&sv=html-core-1.7.8'
+  }
+}
+ ○ Compiling /favicon.ico ...
+ ✓ Compiled /favicon.ico in 711ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 1226ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 277ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 2411ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 1040ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 263ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 423ms
+ ○ Compiling /collab/[id] ...
+ ✓ Compiled /collab/[id] in 4.8s
+ ○ Compiling /api/chat ...
+ ✓ Compiled /api/chat in 507ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-1afee2bf-57d9-4b3a-beb2-a0bf04f68765 200 in 5873ms
+ GET /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 3030ms
+Manual stream: Converted 1 messages
+Manual stream: Truncated to 1 messages
+Tool execution called with 1 messages
+Using Parallel AI search for query: "latest AI developments 2025"
+Parallel AI search query: "latest AI developments 2025"
+Parallel AI response status: 200
+Parallel AI returned 10 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 3
+Manual researcher called with 3 messages
+ POST /api/chat 200 in 18611ms
+Manual stream: Converted 2 messages
+Manual stream: Truncated to 2 messages
+Tool execution called with 2 messages
+Using Parallel AI search for query: "india cricket match results 2025-11-02"
+Parallel AI search query: "india cricket match results 2025-11-02"
+Parallel AI response status: 200
+Parallel AI returned 10 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 4
+Manual researcher called with 4 messages
+ POST /api/chat 200 in 10109ms
+ ✓ Compiled in 863ms
+ ✓ Compiled in 148ms
+ ✓ Compiled in 110ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 2 times.
+Multiple versions of Lit loaded. Loading multiple versions is not recommended. See https://lit.dev/msg/multiple-versions for more information.
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 1454ms
+[Reown Config] Failed to fetch remote project configuration. Using local/default values. Error: HTTP status code: 403
+    at fetchData (../../../../src/utils/FetchUtil.ts:23:17)
+    at async FetchUtil.get (../../../../src/utils/FetchUtil.ts:44:22)
+    at async Object.fetchProjectConfig (../../../../src/controllers/ApiController.ts:158:22)
+    at async Object.fetchRemoteFeatures (../../../../src/utils/ConfigUtil.ts:233:26)
+    at async AppKit.initialize (../../../../src/client/appkit-base-client.ts:165:27) {
+  [cause]: Response {
+    status: 403,
+    statusText: 'Forbidden',
+    headers: Headers {
+      date: 'Sun, 02 Nov 2025 19:42:53 GMT',
+      'content-type': 'text/plain; charset=UTF-8',
+      'content-length': '9',
+      connection: 'keep-alive',
+      'cf-ray': '99861e1a7afa58b8-MAA',
+      'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      vary: 'Accept-Encoding',
+      server: 'cloudflare',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    body: undefined,
+    bodyUsed: false,
+    ok: false,
+    redirected: false,
+    type: 'default',
+    url: 'https://api.web3modal.org/appkit/v1/config?projectId=c1c3518641e82c96d2b1d3f8e8e07b51&st=appkit&sv=html-core-1.7.8'
+  }
+}
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 266ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 451ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 494ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 986ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 745ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-9e8b285c-ccfa-4f24-8d82-f5604e1e8789 200 in 909ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 800ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-a63552b8-7f63-4e92-be19-93aa4bf12e8b 200 in 470ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 3 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 3 times.
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+ GET /collab/collab-a63552b8-7f63-4e92-be19-93aa4bf12e8b 200 in 3221ms
+[Reown Config] Failed to fetch remote project configuration. Using local/default values. Error: HTTP status code: 403
+    at fetchData (../../../../src/utils/FetchUtil.ts:23:17)
+    at async FetchUtil.get (../../../../src/utils/FetchUtil.ts:44:22)
+    at async Object.fetchProjectConfig (../../../../src/controllers/ApiController.ts:158:22)
+    at async Object.fetchRemoteFeatures (../../../../src/utils/ConfigUtil.ts:233:26)
+    at async AppKit.initialize (../../../../src/client/appkit-base-client.ts:165:27) {
+  [cause]: Response {
+    status: 403,
+    statusText: 'Forbidden',
+    headers: Headers {
+      date: 'Sun, 02 Nov 2025 20:10:37 GMT',
+      'content-type': 'text/plain; charset=UTF-8',
+      'content-length': '9',
+      connection: 'keep-alive',
+      'cf-ray': '998646bbdcfb7e78-MAA',
+      'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      vary: 'Accept-Encoding',
+      server: 'cloudflare',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    body: undefined,
+    bodyUsed: false,
+    ok: false,
+    redirected: false,
+    type: 'default',
+    url: 'https://api.web3modal.org/appkit/v1/config?projectId=c1c3518641e82c96d2b1d3f8e8e07b51&st=appkit&sv=html-core-1.7.8'
+  }
+}
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 709ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 827ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-a63552b8-7f63-4e92-be19-93aa4bf12e8b 200 in 1499ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 878ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 439ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 753ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 897ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-77cfc41a-e77f-4557-b0cb-6e4725695644 200 in 286ms
+ ✓ Compiled in 926ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 4 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 4 times.
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+ GET /collab/collab-77cfc41a-e77f-4557-b0cb-6e4725695644 200 in 2664ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 320ms
+[Reown Config] Failed to fetch remote project configuration. Using local/default values. Error: HTTP status code: 403
+    at fetchData (../../../../src/utils/FetchUtil.ts:23:17)
+    at async FetchUtil.get (../../../../src/utils/FetchUtil.ts:44:22)
+    at async Object.fetchProjectConfig (../../../../src/controllers/ApiController.ts:158:22)
+    at async Object.fetchRemoteFeatures (../../../../src/utils/ConfigUtil.ts:233:26)
+    at async AppKit.initialize (../../../../src/client/appkit-base-client.ts:165:27) {
+  [cause]: Response {
+    status: 403,
+    statusText: 'Forbidden',
+    headers: Headers {
+      date: 'Sun, 02 Nov 2025 20:29:03 GMT',
+      'content-type': 'text/plain; charset=UTF-8',
+      'content-length': '9',
+      connection: 'keep-alive',
+      'cf-ray': '998661baae4054a9-MAA',
+      'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      vary: 'Accept-Encoding',
+      server: 'cloudflare',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    body: undefined,
+    bodyUsed: false,
+    ok: false,
+    redirected: false,
+    type: 'default',
+    url: 'https://api.web3modal.org/appkit/v1/config?projectId=c1c3518641e82c96d2b1d3f8e8e07b51&st=appkit&sv=html-core-1.7.8'
+  }
+}
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 621ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-77cfc41a-e77f-4557-b0cb-6e4725695644 200 in 522ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-77cfc41a-e77f-4557-b0cb-6e4725695644 200 in 510ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 563ms
+ GET /collab/collab-77cfc41a-e77f-4557-b0cb-6e4725695644 200 in 551ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 351ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-77cfc41a-e77f-4557-b0cb-6e4725695644 200 in 510ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 310ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 318ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 272ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 380ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-b4e153cc-359e-4ccb-8840-6748c7338b12 200 in 304ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-abc123... 200 in 965ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 698ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-abc123... 200 in 1079ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-abc123... 200 in 391ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 330ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-abc123... 200 in 669ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 670ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 377ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 277ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 641ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-a1f67bb5-d35c-4f40-baea-12f0da271ad3 200 in 332ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 389ms
+ ✓ Compiled in 2.5s
+ ✓ Compiled in 177ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 5 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 5 times.
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+ GET /collab/collab-a1f67bb5-d35c-4f40-baea-12f0da271ad3 200 in 3488ms
+[Reown Config] Failed to fetch remote project configuration. Using local/default values. Error: HTTP status code: 403
+    at fetchData (../../../../src/utils/FetchUtil.ts:23:17)
+    at async FetchUtil.get (../../../../src/utils/FetchUtil.ts:44:22)
+    at async Object.fetchProjectConfig (../../../../src/controllers/ApiController.ts:158:22)
+    at async Object.fetchRemoteFeatures (../../../../src/utils/ConfigUtil.ts:233:26)
+    at async AppKit.initialize (../../../../src/client/appkit-base-client.ts:165:27) {
+  [cause]: Response {
+    status: 403,
+    statusText: 'Forbidden',
+    headers: Headers {
+      date: 'Sun, 02 Nov 2025 20:35:57 GMT',
+      'content-type': 'text/plain; charset=UTF-8',
+      'content-length': '9',
+      connection: 'keep-alive',
+      'cf-ray': '99866bda7e8fbc9a-BOM',
+      'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      vary: 'Accept-Encoding',
+      server: 'cloudflare',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    body: undefined,
+    bodyUsed: false,
+    ok: false,
+    redirected: false,
+    type: 'default',
+    url: 'https://api.web3modal.org/appkit/v1/config?projectId=c1c3518641e82c96d2b1d3f8e8e07b51&st=appkit&sv=html-core-1.7.8'
+  }
+}
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 578ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-a1f67bb5-d35c-4f40-baea-12f0da271ad3 200 in 817ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 982ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 658ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 329ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 701ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-806dc84c-fc71-4959-aec0-939d76a16aed 200 in 265ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 399ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 464ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 708ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-806dc84c-fc71-4959-aec0-939d76a16aed 200 in 444ms
+Manual stream: Converted 2 messages
+Manual stream: Truncated to 2 messages
+Tool execution called with 2 messages
+Manual stream: Tool call returned 0 additional messages
+Manual stream: Final message count: 2
+Manual researcher called with 2 messages
+ POST /api/chat 200 in 2400ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-806dc84c-fc71-4959-aec0-939d76a16aed 200 in 336ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 525ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-806dc84c-fc71-4959-aec0-939d76a16aed 200 in 1047ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 1287ms
+Manual stream: Converted 3 messages
+Manual stream: Truncated to 3 messages
+Tool execution called with 3 messages
+Using Parallel AI search for query: "current events in India"
+Parallel AI search query: "current events in India"
+Parallel AI response status: 200
+Parallel AI returned 10 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 5
+Manual researcher called with 5 messages
+ POST /api/chat 200 in 13854ms
+Manual stream: Converted 5 messages
+Manual stream: Truncated to 5 messages
+Tool execution called with 5 messages
+Using Parallel AI search for query: "current events in India"
+Parallel AI search query: "current events in India"
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Parallel AI response status: 200
+Parallel AI returned 10 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 7
+Manual researcher called with 7 messages
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-806dc84c-fc71-4959-aec0-939d76a16aed 200 in 610ms
+ POST /api/chat 200 in 5856ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 1156ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-806dc84c-fc71-4959-aec0-939d76a16aed 200 in 720ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 254ms
+Manual stream: Converted 6 messages
+Manual stream: Truncated to 6 messages
+Tool execution called with 6 messages
+Using Parallel AI search for query: "current events in India"
+Parallel AI search query: "current events in India"
+Parallel AI response status: 200
+Parallel AI returned 10 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 8
+Manual researcher called with 8 messages
+ POST /api/chat 200 in 13054ms
+ ✓ Compiled in 1863ms
+ ✓ Compiled in 875ms
+ ✓ Compiled in 3.2s
+ ✓ Compiled in 7.2s
+ ✓ Compiled in 2.2s
+ ✓ Compiled in 726ms
+ ✓ Compiled in 263ms
+ ✓ Compiled in 404ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 6 times.
+WalletConnect Core is already initialized. This is probably a mistake and can lead to unexpected behavior. Init() was called 6 times.
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+[Reown Config] Failed to fetch remote project configuration. Using local/default values. Error: HTTP status code: 403
+    at fetchData (../../../../src/utils/FetchUtil.ts:23:17)
+    at async FetchUtil.get (../../../../src/utils/FetchUtil.ts:44:22)
+    at async Object.fetchProjectConfig (../../../../src/controllers/ApiController.ts:158:22)
+    at async Object.fetchRemoteFeatures (../../../../src/utils/ConfigUtil.ts:233:26)
+    at async AppKit.initialize (../../../../src/client/appkit-base-client.ts:165:27) {
+  [cause]: Response {
+    status: 403,
+    statusText: 'Forbidden',
+    headers: Headers {
+      date: 'Sun, 02 Nov 2025 20:46:13 GMT',
+      'content-type': 'text/plain; charset=UTF-8',
+      'content-length': '9',
+      connection: 'keep-alive',
+      'cf-ray': '99867ae00f7a8135-MAA',
+      'access-control-allow-origin': '*',
+      'cache-control': 'public, max-age=300, s-maxage=300',
+      vary: 'Accept-Encoding',
+      server: 'cloudflare',
+      'alt-svc': 'h3=":443"; ma=86400'
+    },
+    body: undefined,
+    bodyUsed: false,
+    ok: false,
+    redirected: false,
+    type: 'default',
+    url: 'https://api.web3modal.org/appkit/v1/config?projectId=c1c3518641e82c96d2b1d3f8e8e07b51&st=appkit&sv=html-core-1.7.8'
+  }
+}
+Yjs was already imported. This breaks constructor checks and will lead to issues! - https://github.com/yjs/yjs/issues/438
+ GET /collab/collab-806dc84c-fc71-4959-aec0-939d76a16aed 200 in 7593ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 735ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 1596ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 1681ms
+ HEAD / 200 in 1943ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-d5aa13b0-f180-4488-a19c-5d3f52fcad7a 200 in 861ms
+Manual stream: Converted 1 messages
+Manual stream: Truncated to 1 messages
+Tool execution called with 1 messages
+Using Parallel AI search for query: "weather in Hyderabad today"
+Parallel AI search query: "weather in Hyderabad today"
+Parallel AI response status: 200
+Parallel AI returned 9 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 3
+Manual researcher called with 3 messages
+ POST /api/chat 200 in 14553ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 421ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-63975ee0-a5aa-4542-a9a3-90b1cd445653 200 in 254ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-c9973d70-eaf1-4fbc-a079-2999e5d2c344 200 in 286ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 394ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 261ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 506ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-c9973d70-eaf1-4fbc-a079-2999e5d2c344 200 in 277ms
+Manual stream: Converted 1 messages
+Manual stream: Truncated to 1 messages
+Tool execution called with 1 messages
+Using Parallel AI search for query: "U in US latest news"
+Parallel AI search query: "U in US latest news"
+Parallel AI response status: 200
+Parallel AI returned 20 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 3
+Manual researcher called with 3 messages
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-c9973d70-eaf1-4fbc-a079-2999e5d2c344 200 in 763ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 460ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-c9973d70-eaf1-4fbc-a079-2999e5d2c344 200 in 829ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 907ms
+ POST /api/chat 200 in 28331ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 375ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 141ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-0d797ee1-b18a-45ce-9f6b-cebfc6267ffd 200 in 372ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 635ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 313ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 1522ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-0d797ee1-b18a-45ce-9f6b-cebfc6267ffd 200 in 315ms
+Manual stream: Converted 1 messages
+Manual stream: Truncated to 1 messages
+Tool execution called with 1 messages
+Manual stream: Tool call returned 0 additional messages
+Manual stream: Final message count: 1
+Manual researcher called with 1 messages
+ POST /api/chat 200 in 4535ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-0d797ee1-b18a-45ce-9f6b-cebfc6267ffd 200 in 391ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 280ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD /collab/collab-0d797ee1-b18a-45ce-9f6b-cebfc6267ffd 200 in 755ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 782ms
+Manual stream: Converted 2 messages
+Manual stream: Truncated to 1 messages
+Tool execution called with 1 messages
+Manual stream: Tool call returned 0 additional messages
+Manual stream: Final message count: 1
+Manual researcher called with 1 messages
+ POST /api/chat 200 in 4051ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 722ms
+ GET /favicon.ico?favicon.b8031c0f.ico 200 in 326ms
+WARNING: Panel defaultSize prop recommended to avoid layout shift after server rendering
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ HEAD / 200 in 491ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-3ceb7e5b-bb18-46c8-b6ad-ecabb9f1479d 200 in 337ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET / 200 in 311ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-3ceb7e5b-bb18-46c8-b6ad-ecabb9f1479d 200 in 270ms
+Manual stream: Converted 1 messages
+Manual stream: Truncated to 1 messages
+Tool execution called with 1 messages
+Using Parallel AI search for query: "current weather in Hyderabad"
+Parallel AI search query: "current weather in Hyderabad"
+Parallel AI response status: 200
+Parallel AI returned 18 results
+completed search
+Tool execution: Returning 2 messages
+Manual stream: Tool call returned 2 additional messages
+Manual stream: Final message count: 3
+Manual researcher called with 3 messages
+ POST /api/chat 200 in 21537ms
+ ✓ Compiled in 1644ms
+ ✓ Compiled in 455ms
+ ✓ Compiled in 368ms
+ ✓ Compiled in 405ms
+ ✓ Compiled in 1648ms
+ ✓ Compiled in 4.6s
+ ✓ Compiled /collab/[id] in 288ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-b4e153cc-359e-4ccb-8840-6748c7338b12 200 in 6097ms
+ GET /collab/collab-a63552b8-7f63-4e92-be19-93aa4bf12e8b 200 in 6199ms
+ GET /collab/collab-3ceb7e5b-bb18-46c8-b6ad-ecabb9f1479d 200 in 6119ms
+Attempting to fetch models from: http://localhost:3002/config/models.json
+Successfully loaded models from URL
+OLLAMA_BASE_URL not configured, skipping Ollama models
+Loaded 5 static models and 0 Ollama models
+ GET /collab/collab-3ceb7e5b-bb18-46c8-b6ad-ecabb9f1479d 200 in 857ms
+ ✓ Compiled in 4.8s
+ ✓ Compiled in 1010ms
+ ✓ Compiled in 931ms
+ ✓ Compiled in 10.5s
+ ✓ Compiled in 1024ms
