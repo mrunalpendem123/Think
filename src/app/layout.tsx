@@ -10,6 +10,7 @@ import ThemeProvider from '@/components/theme/Provider';
 import configManager from '@/lib/config';
 import SetupWizard from '@/components/Setup/SetupWizard';
 import { ChatProvider } from '@/lib/hooks/useChat';
+import { cookies } from 'next/headers';
 
 const libreBaskerville = Libre_Baskerville({
   weight: ['400', '700'],
@@ -20,17 +21,29 @@ const libreBaskerville = Libre_Baskerville({
 });
 
 export const metadata: Metadata = {
-  title: 'Think Fast - Chat with the internet',
+  title: 'Think AI - Powered by Venice',
   description:
-    'Think Fast is an AI powered chatbot that is connected to the internet.',
+    'Think AI is an AI powered chatbot that is connected to the internet, powered by Venice.ai',
+  icons: {
+    icon: [
+      { url: '/icon.png', sizes: '440x440', type: 'image/png' },
+      { url: '/icon-100.png', sizes: '100x100', type: 'image/png' },
+      { url: '/icon-50.png', sizes: '50x50', type: 'image/png' },
+    ],
+    shortcut: '/icon.png',
+    apple: '/icon.png',
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const setupComplete = configManager.isSetupComplete();
+  // Check cookie for setup completion (works on Vercel where filesystem is read-only)
+  const cookieStore = await cookies();
+  const setupCompleteCookie = cookieStore.get('setup-complete');
+  const setupComplete = setupCompleteCookie?.value === 'true' || configManager.isSetupComplete();
   const configSections = configManager.getUIConfigSections();
 
   return (

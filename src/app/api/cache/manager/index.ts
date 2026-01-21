@@ -1,31 +1,18 @@
 import { ICacheManager } from "./interface";
 import { NoOpCacheManager } from "./noOpCache";
-import { RedisCacheManager } from "./redisCache";
 
 let cacheManager: ICacheManager;
 
 /**
- * Initializes the cache manager based on the environment configuration.
- * If a Redis URL is provided, it uses the Redis-based cache. Otherwise, it falls back to a no-op cache.
- * Users can extend this function to add their own custom cache manager.
+ * Initializes the cache manager.
+ * For server-side API routes, uses a no-op cache manager.
+ * Note: IndexedDB is only available in the browser, so it cannot be used in API routes.
  * @returns An instance of a class that implements the ICacheManager interface.
  */
 const initializeCacheManager = (): ICacheManager => {
-  // If you have a Redis instance, the application will use it for caching.
-  if (process.env.REDIS_URL) {
-    console.log("Using Redis cache manager.");
-    return new RedisCacheManager();
-  }
-
-  // To add your own cache manager, you can add a new condition here.
-  // For example:
-  // if (process.env.MY_CUSTOM_CACHE_URL) {
-  //   return new MyCustomCacheManager();
-  // }
-
-  // If no cache is configured, the application will use a no-op cache manager
-  // that does not persist any data.
-  console.log("Using no-op cache manager.");
+  // API routes run on the server where IndexedDB is not available
+  // Using no-op cache manager for server-side
+  console.log("Using no-op cache manager (server-side API routes).");
   return new NoOpCacheManager();
 };
 

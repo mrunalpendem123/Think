@@ -98,43 +98,84 @@ class VeniceProvider extends BaseModelProvider<VeniceConfig> {
   }
 
   async loadChatModel(key: string): Promise<BaseChatModel> {
-    const modelList = await this.getModelList();
+    try {
+      console.log('[VeniceProvider] Loading chat model:', { key, apiKey: this.config.apiKey ? '***' : 'MISSING', baseURL: this.config.baseURL });
+      
+      const modelList = await this.getModelList();
+      console.log('[VeniceProvider] Available chat models:', modelList.chat.map(m => m.key));
 
-    const exists = modelList.chat.find((m) => m.key === key);
+      const exists = modelList.chat.find((m) => m.key === key);
 
-    if (!exists) {
-      throw new Error(
-        'Error Loading Venice AI Chat Model. Invalid Model Selected',
-      );
+      if (!exists) {
+        console.error('[VeniceProvider] Model not found:', { requested: key, available: modelList.chat.map(m => m.key) });
+        throw new Error(
+          `Error Loading Venice AI Chat Model. Invalid Model Selected: ${key}. Available models: ${modelList.chat.map(m => m.key).join(', ')}`,
+        );
+      }
+
+      if (!this.config.apiKey) {
+        throw new Error('Venice AI API key is missing');
+      }
+
+      if (!this.config.baseURL) {
+        throw new Error('Venice AI base URL is missing');
+      }
+
+      const model = new ChatOpenAI({
+        apiKey: this.config.apiKey,
+        temperature: 0.7,
+        model: key,
+        configuration: {
+          baseURL: this.config.baseURL,
+        },
+      });
+      
+      console.log('[VeniceProvider] Chat model created successfully');
+      return model;
+    } catch (error) {
+      console.error('[VeniceProvider] Error in loadChatModel:', error);
+      throw error;
     }
-
-    return new ChatOpenAI({
-      apiKey: this.config.apiKey,
-      temperature: 0.7,
-      model: key,
-      configuration: {
-        baseURL: this.config.baseURL,
-      },
-    });
   }
 
   async loadEmbeddingModel(key: string): Promise<Embeddings> {
-    const modelList = await this.getModelList();
-    const exists = modelList.embedding.find((m) => m.key === key);
+    try {
+      console.log('[VeniceProvider] Loading embedding model:', { key, apiKey: this.config.apiKey ? '***' : 'MISSING', baseURL: this.config.baseURL });
+      
+      const modelList = await this.getModelList();
+      console.log('[VeniceProvider] Available embedding models:', modelList.embedding.map(m => m.key));
+      
+      const exists = modelList.embedding.find((m) => m.key === key);
 
-    if (!exists) {
-      throw new Error(
-        'Error Loading Venice AI Embedding Model. Invalid Model Selected.',
-      );
+      if (!exists) {
+        console.error('[VeniceProvider] Embedding model not found:', { requested: key, available: modelList.embedding.map(m => m.key) });
+        throw new Error(
+          `Error Loading Venice AI Embedding Model. Invalid Model Selected: ${key}. Available models: ${modelList.embedding.map(m => m.key).join(', ')}`,
+        );
+      }
+
+      if (!this.config.apiKey) {
+        throw new Error('Venice AI API key is missing');
+      }
+
+      if (!this.config.baseURL) {
+        throw new Error('Venice AI base URL is missing');
+      }
+
+      const model = new OpenAIEmbeddings({
+        apiKey: this.config.apiKey,
+        model: key,
+        configuration: {
+          baseURL: this.config.baseURL,
+        },
+      });
+      
+      console.log('[VeniceProvider] Embedding model created successfully');
+      return model;
+    } catch (error) {
+      console.error('[VeniceProvider] Error in loadEmbeddingModel:', error);
+      throw error;
     }
-
-    return new OpenAIEmbeddings({
-      apiKey: this.config.apiKey,
-      model: key,
-      configuration: {
-        baseURL: this.config.baseURL,
-      },
-    });
   }
 
   static parseAndValidate(raw: any): VeniceConfig {

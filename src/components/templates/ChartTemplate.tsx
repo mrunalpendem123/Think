@@ -2,21 +2,21 @@
 
 import React from 'react';
 import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  AreaChart,
-  Area,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
+    Area,
+    AreaChart,
+    Bar,
+    BarChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Line,
+    LineChart,
+    Pie,
+    PieChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis,
+    YAxis,
 } from 'recharts';
 
 export interface ChartData {
@@ -161,7 +161,7 @@ const ChartTemplate: React.FC<ChartTemplateProps> = ({
               cy="50%"
               labelLine={false}
               label={({ name, percent }) =>
-                `${name}: ${((percent || 0) * 100).toFixed(0)}%`
+                `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`
               }
               outerRadius={120}
               fill="#8884d8"

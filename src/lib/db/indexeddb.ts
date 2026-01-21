@@ -10,14 +10,14 @@ interface Chat {
 
 interface Message {
   id?: number;
-  role: 'assistant' | 'user' | 'source' | 'template';
+  role: 'assistant' | 'user' | 'source' | 'template' | 'suggestion';
   chatId: string;
   createdAt: string;
   messageId: string;
   content?: string | null;
   sources?: any[] | null;
-  template?: string | null;
-  data?: any | null;
+  template?: string;
+  data?: any;
 }
 
 const DB_NAME = 'perplexica-db';
@@ -173,28 +173,46 @@ export const deleteChat = async (chatId: string): Promise<void> => {
 };
 
 // Message operations
-export const saveMessage = async (message: Message): Promise<void> => {
+export const saveMessage = async (message: Message | any): Promise<void> => {
   const db = await getDB();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([MESSAGES_STORE], 'readwrite');
     const store = transaction.objectStore(MESSAGES_STORE);
     
+    // Convert createdAt Date to ISO string for storage
+    // Handle both Date objects and ISO strings
+    let createdAtString: string;
+    if (message.createdAt instanceof Date) {
+      createdAtString = message.createdAt.toISOString();
+    } else if (typeof message.createdAt === 'string') {
+      // Already a string, use it directly
+      createdAtString = message.createdAt;
+    } else {
+      // Fallback to current time
+      createdAtString = new Date().toISOString();
+    }
+    
+    const messageToSave: any = {
+      ...message,
+      createdAt: createdAtString,
+    };
+    
     // Check if message with same messageId exists
     const index = store.index('messageId');
-    const checkRequest = index.get(message.messageId);
+    const checkRequest = index.get(messageToSave.messageId);
 
     checkRequest.onsuccess = () => {
       if (checkRequest.result) {
         // Update existing message
         const updateRequest = store.put({
           ...checkRequest.result,
-          ...message,
+          ...messageToSave,
         });
         updateRequest.onsuccess = () => resolve();
         updateRequest.onerror = () => reject(updateRequest.error);
       } else {
         // Add new message
-        const addRequest = store.add(message);
+        const addRequest = store.add(messageToSave);
         addRequest.onsuccess = () => resolve();
         addRequest.onerror = () => reject(addRequest.error);
       }

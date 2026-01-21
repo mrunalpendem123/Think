@@ -109,7 +109,7 @@ export class ChatManager {
 
     this.provider.on('peers', (event: any) => {
       console.log('👥 Peers changed:', event.added, 'added,', event.removed, 'removed')
-      console.log('   Total peers connected:', (this.provider as any)?.peers?.size || 0)
+      console.log('   Total peers connected:', this.provider?.peers?.size || 0)
     })
 
     console.log('✅ P2P: Connected to chat:', this.chatId)

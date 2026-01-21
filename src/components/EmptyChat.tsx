@@ -17,6 +17,9 @@ const EmptyChat = () => {
           <h2 className="text-black/70 dark:text-white/70 text-3xl font-medium -mt-8">
             Your searches are private.
           </h2>
+          <p className="text-black/50 dark:text-white/50 text-sm font-medium -mt-6 mb-4">
+            Powered by Venice.ai
+          </p>
           <EmptyChatMessageInput />
         </div>
         <div className="flex flex-col w-full gap-4 mt-2 sm:flex-row sm:justify-center">

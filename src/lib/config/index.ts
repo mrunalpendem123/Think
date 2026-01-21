@@ -114,11 +114,11 @@ class ConfigManager {
       {
         name: 'Additional SearXNG Fallback URLs',
         key: 'searxngFallbackURLs',
-        type: 'array',
+        type: 'string',
         required: false,
         description: 'Additional fallback SearXNG instance URLs (optional). Multiple instances can be configured for better reliability.',
         placeholder: 'https://instance1.com,https://instance2.com',
-        default: [],
+        default: '',
         scope: 'server',
         env: 'SEARXNG_FALLBACK_URLS',
       },
@@ -168,44 +168,75 @@ class ConfigManager {
   }
 
   private saveConfig() {
-    fs.writeFileSync(
-      this.configPath,
-      JSON.stringify(this.currentConfig, null, 2),
-    );
-  }
-
-  private initializeConfig() {
-    const exists = fs.existsSync(this.configPath);
-    if (!exists) {
+    try {
+      // Ensure directory exists
+      const dir = path.dirname(this.configPath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
       fs.writeFileSync(
         this.configPath,
         JSON.stringify(this.currentConfig, null, 2),
       );
-    } else {
-      try {
-        this.currentConfig = JSON.parse(
-          fs.readFileSync(this.configPath, 'utf-8'),
-        );
-      } catch (err) {
-        if (err instanceof SyntaxError) {
-          console.error(
-            `Error parsing config file at ${this.configPath}:`,
-            err,
-          );
-          console.log(
-            'Loading default config and overwriting the existing file.',
-          );
+    } catch (error) {
+      // On Vercel or other read-only filesystems, config writes may fail
+      // Log warning but don't throw - use in-memory config only
+      console.warn('Could not save config to file system (read-only?):', error);
+    }
+  }
+
+  private initializeConfig() {
+    try {
+      const exists = fs.existsSync(this.configPath);
+      if (!exists) {
+        // Try to create config file, but don't fail if filesystem is read-only
+        try {
+          const dir = path.dirname(this.configPath);
+          if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+          }
           fs.writeFileSync(
             this.configPath,
             JSON.stringify(this.currentConfig, null, 2),
           );
-          return;
-        } else {
-          console.log('Unknown error reading config file:', err);
+        } catch (writeError) {
+          console.warn('Could not create config file (read-only filesystem?):', writeError);
+          // Continue with default config in memory
         }
-      }
+      } else {
+        try {
+          this.currentConfig = JSON.parse(
+            fs.readFileSync(this.configPath, 'utf-8'),
+          );
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            console.error(
+              `Error parsing config file at ${this.configPath}:`,
+              err,
+            );
+            console.log(
+              'Loading default config and overwriting the existing file.',
+            );
+            try {
+              fs.writeFileSync(
+                this.configPath,
+                JSON.stringify(this.currentConfig, null, 2),
+              );
+            } catch (writeError) {
+              console.warn('Could not overwrite config file:', writeError);
+            }
+            return;
+          } else {
+            console.log('Unknown error reading config file:', err);
+          }
+        }
 
-      this.currentConfig = this.migrateConfig(this.currentConfig);
+        this.currentConfig = this.migrateConfig(this.currentConfig);
+      }
+    } catch (error) {
+      // If filesystem operations fail entirely (e.g., on Vercel), use default config
+      console.warn('Config file system access failed, using default config:', error);
+      // Continue with default config in memory
     }
   }
 
@@ -238,10 +269,17 @@ class ConfigManager {
       };
 
       provider.fields.forEach((field) => {
-        newProvider.config[field.key] =
-          process.env[field.env!] ||
-          field.default ||
-          ''; /* Env var must exist for providers */
+        // Auto-configure Venice AI with hardcoded API key
+        if (provider.key === 'venice' && field.key === 'apiKey') {
+          newProvider.config[field.key] = process.env[field.env!] || '5veQ8IP7eF-x9xvpn-XK0vQPvRC3L8QoyDW-q8o1pX';
+        } else if (provider.key === 'venice' && field.key === 'baseURL') {
+          newProvider.config[field.key] = process.env[field.env!] || field.default || 'https://api.venice.ai/api/v1';
+        } else {
+          newProvider.config[field.key] =
+            process.env[field.env!] ||
+            field.default ||
+            ''; /* Env var must exist for providers */
+        }
 
         if (field.required) newProvider.required?.push(field.key);
       });
@@ -254,7 +292,8 @@ class ConfigManager {
         }
       });
 
-      if (configured) {
+      // For Venice, always consider it configured since we auto-set the API key
+      if (configured || (provider.key === 'venice' && newProvider.config.apiKey)) {
         const hash = hashObj(newProvider.config);
         newProvider.hash = hash;
         delete newProvider.required;
@@ -381,33 +420,30 @@ class ConfigManager {
     /* search section */
     this.uiConfigSections.search.forEach((f) => {
       if (f.env && !this.currentConfig.search[f.key]) {
-        if (f.type === 'array') {
-          // Handle array types (comma-separated string from env)
-          const envValue = process.env[f.env];
-          if (envValue) {
-            this.currentConfig.search[f.key] = envValue.split(',').map((url: string) => url.trim()).filter(Boolean);
-          } else {
-            this.currentConfig.search[f.key] = f.default ?? [];
-          }
+        const envValue = process.env[f.env];
+        // Handle searxngFallbackURLs as comma-separated string that gets split into array
+        if (f.key === 'searxngFallbackURLs' && envValue) {
+          this.currentConfig.search[f.key] = envValue.split(',').map((url: string) => url.trim()).filter(Boolean);
         } else {
-          this.currentConfig.search[f.key] =
-            process.env[f.env] ?? f.default ?? '';
+          this.currentConfig.search[f.key] = envValue ?? f.default ?? '';
         }
       }
     });
 
-    // Auto-mark setup as complete if Venice AI and Parallel AI are configured
+    // Auto-mark setup as complete if Venice AI is configured (Venice is always auto-configured)
+    // Also check if Venice was just added in this initialization
     const hasVeniceAI = this.currentConfig.modelProviders.some(
-      (p) => p.type === 'venice' && p.chatModels.length > 0,
+      (p) => p.type === 'venice' && p.config.apiKey && p.chatModels.length > 0,
     );
-    const hasParallelAI = !!(
-      this.currentConfig.search.parallelAPIKey ||
-      process.env.PARALLEL_API_KEY
-    );
-
-    if (hasVeniceAI && hasParallelAI && !this.currentConfig.setupComplete) {
+    
+    // If Venice AI is configured but setup is not complete, mark it complete
+    if (hasVeniceAI && !this.currentConfig.setupComplete) {
       this.currentConfig.setupComplete = true;
-      console.log('Auto-configuration complete: Venice AI and Parallel AI are configured');
+      console.log('Auto-configuration complete: Venice AI is configured');
+      // Set cookie for Vercel compatibility
+      if (typeof process !== 'undefined' && process.env.VERCEL) {
+        // Cookie will be set by the API route when setup completes
+      }
     }
 
     this.saveConfig();
@@ -541,6 +577,8 @@ class ConfigManager {
   }
 
   public isSetupComplete() {
+    // Check cookie first (for Vercel where filesystem is read-only)
+    // This is checked in the layout component via cookies()
     return this.currentConfig.setupComplete;
   }
 
@@ -549,7 +587,14 @@ class ConfigManager {
       this.currentConfig.setupComplete = true;
     }
 
+    // On Vercel, filesystem is read-only, so saveConfig will fail silently
+    // But we can still mark as complete in memory
     this.saveConfig();
+    
+    // Also set an environment variable flag for Vercel
+    if (process.env.VERCEL) {
+      process.env.SETUP_COMPLETE = 'true';
+    }
   }
 
   public getUIConfigSections(): UIConfigSections {
